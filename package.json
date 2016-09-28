@@ -1,0 +1,15 @@
+{
+  "name": "raybot",
+  "version": "0.2.1",
+  "description": "Noah first Slack Bot with node",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+
+  },
+  "author": "Noah",
+  "license": "UNLICENCED",
+  "dependencies": {
+    "@slack/client": "^3.6.0"
+  }
+}
