@@ -244,6 +244,7 @@ function cmdRps(input, lang) {
 					return " wins!";
 				}
 			});
+			
 
 			return "SCORE: (" + user.name + " and " + bot.name + ")\n" + user.name + ": " + rpsScoreTmpArr[0] + winForm[0] + "\n" + bot.name + ": " + rpsScoreTmpArr[1] + winForm[1];
 		}
