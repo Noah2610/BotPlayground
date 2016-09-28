@@ -22,15 +22,6 @@ var rtm = new RtmClient(token, {
 	var inputArr = [];
 	var cmdChar = "!";
 
-	/* var cmdArr = [
-		"list",
-		"calc"
-	];
-	var cmdDescArr = [
-		" - Displays this list of commands that I am able to execute.",  // list
-		" + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."  // calc
-	]; */
-
 	var cmdArr = [
 		{name: "list", desc: " - Displays this list of commands that I am able to execute."},  // list
 		{name: "calc", desc: " + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."},  // calc
@@ -44,7 +35,6 @@ var rtm = new RtmClient(token, {
 	};
 
 	var keyWordsExtArr = {
-		//person: {user: ["ich","mich"], bot: ["du","dich"]},
 		question: {question: ["who","how","do","are"]},
 		persons: {
 			sg: ["ich","du","er","sie","es"],
@@ -61,10 +51,6 @@ var rtm = new RtmClient(token, {
 	var infoArr = [];
 
 	// read / write from rps scoreboard file
-	// var rpsScoreF = ("data/rps_scoreboard.txt");
-	// if (rpsScoreF) {
-	// 	console.log("TETS");
-	// }
 	var rpsDir = "data/rps_scoreboard.txt";
 	fs.readFile(rpsDir, function (err, data) {
 		if (err) {
@@ -76,9 +62,6 @@ var rtm = new RtmClient(token, {
 		}
 		rpsScoreArr = data.toString().split("\n");
 	});
-
-	// console.log(rpsScoreArr);
-
 
 
 
@@ -94,12 +77,11 @@ function cmdList() {
 		rtm.sendMessage(output, roomID);
 };
 
-function cmdCalc(getInfo) {
+function cmdCalc(info) {
 		//var tmpArr = [ message.text.substr(message.text.search(cmdChar) + 1, message.text.search(" ") - 1) ]
 		//inputArr.push(tmpArr.concat(message.text.substr(message.text.search(" ") + 1, message.text.length - 1).replace(/ /g, "").split("")));
 			// i cant split every char like here, wont work for numbers.length > 1
-	var info = getInfo.replace(/ /g, "");
-		console.log(info);
+	var info = info.replace(/ /g, "");
 	var numArr = [];
 	var opArr = [];
 	var prnth = [];
@@ -133,8 +115,6 @@ function cmdCalc(getInfo) {
 	if (parseInt(numArr.length - 1) != parseInt(opArr.length)) {
 		return "I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:";
 	}
-
-	console.log(numArr,opArr);
 
 		var res = 0; var op = ""; replNum = 0;
 		var lvl2ops = /[*x/:]/; var skip = false;
@@ -172,7 +152,6 @@ function cmdCalc(getInfo) {
 					var op = op + " " + curOp + " " + curNum;
 				}
 
-				console.log(skip)
 			if (skip == false) {
 				switch (curOp) {  // check calculation methods
 					case "+":
@@ -188,7 +167,6 @@ function cmdCalc(getInfo) {
 							break;
 					case "/":
 					case ":":
-							console.log(prevNum + " " + curOp + " " + curNum);
 						numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
 							break;
 					default:
@@ -199,11 +177,9 @@ function cmdCalc(getInfo) {
 				var skip = false;
 			}
 
-				console.log(countOpLvl + " " + count + ": " + op + " = " + numArr);
 		}
 	}
 
-		console.log(numArr)
 	op = op + " = ";
 	for (var count = 0; count < numArr.length; count++) {
 		if (!isNaN(numArr[count]) && numArr[count] != "") {
@@ -330,7 +306,6 @@ function nlp(inputTmpArr) {
 	};
 	var resArr = [];
 	var foundWord = false;
-		// return inputArr[inputArr.length - 1][0];
 
 	for (var count = 0; count < inputTmpArr.length; count++) {
 		var inputTmp = inputTmpArr[count].replace(/[,.!?;]/g, "").toLowerCase();
@@ -357,8 +332,8 @@ function nlp(inputTmpArr) {
 		}
 
 	}
-		console.log(nlpArr);
-		console.log(resArr);
+		// console.log(nlpArr);
+		// console.log(resArr);
 		return resArr.join().replace(/,/g, " ");
 };
 
@@ -404,8 +379,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			}
 				console.log(count * countKeys);
 		}
-				console.log((inputArr[inputArr.length - 1].length) + " * " + (keyWordsArr.maxLength) + " " + (inputArr[inputArr.length - 1].length) * (keyWordsArr.maxLength) + " " + checkTmp);
-			if (checkTmp == (inputArr[inputArr.length - 1].length) * (keyWordsArr.maxLength)) {
+			if (checkTmp == (inputArr[inputArr.length - 1].length) * (keyWordsArr.maxLength)) {  // nlp
 				rtm.sendMessage(nlp(inputArr[inputArr.length - 1]), roomID);
 			}
 
@@ -416,9 +390,6 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 	} else {
 		// if cmd char is found
-		/* if (lastInput.substr(lastInput.search(cmdChar) + 1, lastInput.search(cmdChar) + 4) == "calc") {
-			rtm.sendMessage(cmdCalc(lastInput.substr(lastInput.search(cmdChar) + 5, lastInput.length)), roomID);
-		} */
 
 		if (lastInput.search(cmdArr[0].name) != -1) {  // list
 			cmdList();
