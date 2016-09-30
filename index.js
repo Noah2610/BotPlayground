@@ -12,7 +12,10 @@ var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 var MemoryDataStore = require('@slack/client').MemoryDataStore;
 
-var token = process.env.SLACK_API_TOKEN || 'xoxb-80450208261-X2MXbJE20dyrlOfXHHXvud3Z';
+// read token from local file
+var tokenDir = "data/token.txt";
+var token = process.env.SLACK_API_TOKEN || fs.readFileSync(tokenDir, "utf8").replace(/\n/g, "");
+
 var rtm = new RtmClient(token, {
 	logLevel: "info",
 	dataStore: new MemoryDataStore()
@@ -48,8 +51,6 @@ var rtm = new RtmClient(token, {
 		}
 	};
 
-	var infoArr = [];
-
 	// read / write from rps scoreboard file
 	var rpsDir = "data/rps_scoreboard.txt";
 	fs.readFile(rpsDir, function (err, data) {
@@ -62,7 +63,6 @@ var rtm = new RtmClient(token, {
 		}
 		rpsScoreArr = data.toString().split("\n");
 	});
-
 
 
 function curDate(frmt) {  // get date and/or time with format
