@@ -12,6 +12,9 @@ var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 var MemoryDataStore = require('@slack/client').MemoryDataStore;
 
+// test area
+console.log(curDate("H:M:S"));
+
 // read token from local file
 var tokenDir = "data/token.txt";
 var token = process.env.SLACK_API_TOKEN || fs.readFileSync(tokenDir, "utf8").replace(/\n/g, "");
@@ -33,8 +36,10 @@ var rtm = new RtmClient(token, {
 
 	var keyWordsArr = {
 		maxLength: 5,
-		hello:["hello", "hi", "hey", "ey"],
-		calc:["calculate", "evaluate", "solve", "berechne", "ausrechnen"]
+		hello: ["hello", "hi", "hey", "ey"],
+		calc: ["calculate", "evaluate", "solve", "berechne", "ausrechnen"],
+		date: ["date", "today", "day"],
+		time: ["time", "clock"]
 	};
 
 	var keyWordsExtArr = {
@@ -78,14 +83,10 @@ function cmdList() {
 };
 
 function cmdCalc(info) {
-		//var tmpArr = [ message.text.substr(message.text.search(cmdChar) + 1, message.text.search(" ") - 1) ]
-		//inputArr.push(tmpArr.concat(message.text.substr(message.text.search(" ") + 1, message.text.length - 1).replace(/ /g, "").split("")));
-			// i cant split every char like here, wont work for numbers.length > 1
 	var info = info.replace(/ /g, "");
 	var numArr = [];
 	var opArr = [];
-	var prnth = [];
-
+	var prnth = [];  // future function (maybe)
 
 		var numStart = 0; var numEnd = 0;
 	for (var count = 0; count < info.length; count++) {
@@ -245,26 +246,22 @@ function cmdRps(input, lang) {
 
 	// determine language
 	if (!lang) {
+			var checkTmp = 0;
 		for (var count = 0; count < 3; count++) {
 			if (input == objArr.en.dic[count]) {
 				var lang = "en";
+					break;
 			} else if (input == objArr.de.dic[count]) {
 				var lang = "de";
+					break;
+			} else {
+				checkTmp++;
 			}
 		}
+			if (checkTmp == 3) {
+				return "\"" + input + "\" is not a valid game object!\nUse \"Rock\", \"Paper\", or \"Scissors\" (or their german equivalent).";
+			}
 	}
-
-		var checkTmp = 0;
-	for (var count = 0; count < objArr[lang].dic.length; count++) {
-		if (input == objArr[lang].dic[count]) {
-			break;
-		} else {
-			checkTmp++;
-		}
-	}
-		if (checkTmp == objArr[lang].dic.length) {
-			return "Invalid game object!";
-		}
 
 	var botInput = objArr[lang].dic[Math.round(Math.random() * 2)];
 
@@ -372,12 +369,27 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 					var infoTmp = infoTmp + inputTmp.replace(/[a-zA-Z]/g, "");
 						break;
 
+				} else if (inputTmp == keyWordsArr.date[countKeys]) {  // date
+						var numExt = "";
+					if (parseInt(curDate("d")[curDate("d").length - 1]) === 1 && parseInt(curDate("d")) != 11) {  // 1st
+						var numExt = "st";
+					} else if (parseInt(curDate("d")[curDate("d").length - 1]) === 2 && parseInt(curDate("d")) != 12) {  // 2nd
+						var numExt = "nd";
+					} else if (parseInt(curDate("d")[curDate("d").length - 1]) === 2 && parseInt(curDate("d")) != 12) {  // 3rd
+						var numExt = "rd";
+					} else {  // 0th
+						numExt = "th";
+					}
+					rtm.sendMessage("Today is a " + curDate("W") + " and it's the " + curDate("d") + numExt + " of " + curDate("f, Y") + ".\n" + curDate("W, d.m.Y"), roomID);
+
+				} else if (inputTmp == keyWordsArr.time[countKeys]) {  // time
+					rtm.sendMessage("It's " + curDate("H:M:S"), roomID);
+
 				} else {  // person
 					var checkTmp = checkTmp + 1;
 				}
 
 			}
-				console.log(count * countKeys);
 		}
 			if (checkTmp == (inputArr[inputArr.length - 1].length) * (keyWordsArr.maxLength)) {  // nlp
 				rtm.sendMessage(nlp(inputArr[inputArr.length - 1]), roomID);
