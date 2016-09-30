@@ -12,7 +12,6 @@ var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 var MemoryDataStore = require('@slack/client').MemoryDataStore;
 
-<<<<<<< HEAD
 // read token from local file
 var tokenDir = "data/token.txt";
 var token = process.env.SLACK_API_TOKEN || fs.readFileSync(tokenDir, "utf8").replace(/\n/g, "");
