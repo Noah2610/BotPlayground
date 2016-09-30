@@ -4,7 +4,8 @@
 
 /* eslint no-console:0 */
 
-var fs = require("fs");
+var fs = require('fs');
+var mkdirp = require('mkdirp');
 var datetime = require("node-datetime");
 var RtmClient = require('@slack/client').RtmClient;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
@@ -13,7 +14,19 @@ var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 var MemoryDataStore = require('@slack/client').MemoryDataStore;
 
 // test area
-console.log(curDate("H:M:S"));
+
+// create 'data' dir if doesn't exist
+// mkdirp("data", function(err) {
+// 	// fs.writeFileSync(tokenDir, "", function (err, fd) {
+// 	// 	if (err) {
+// 	// 		return console.log(err);
+// 	// 	}
+// 	// 	return console.log("Please enter your bot token into data/token.txt");
+// 	// });
+//
+// 	fs.openSync(tokenDir, "w");
+// 	fs.closeSync(fs.openSync(tokenDir, "w"));
+// });
 
 // read token from local file
 var tokenDir = "data/token.txt";
