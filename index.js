@@ -7,6 +7,7 @@
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var datetime = require("node-datetime");
+var sprintf = require("sprintf-js").sprintf;
 var RtmClient = require('@slack/client').RtmClient;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -37,15 +38,15 @@ var rtm = new RtmClient(token, {
 	dataStore: new MemoryDataStore()
 });
 
-	var roomID = "D2CDJJQ66";
+	// var roomID = "D2CDJJQ66";
 	var inputArr = [];
 	var cmdChar = "!";
 
 	var cmdArr = [
-		{name: "list", desc: " - Displays this list of commands that I am able to execute."},  // list
-		{name: "calc", desc: " + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."},  // calc
-		{name: "rps", desc: " + object of choice ('rock'/'stein', 'paper'/'papier', 'scissors'/'schere') - Play 'Rock, Paper, Scissors' with me! Adding 'score' as a parameter will display your scoreboard with me. (English and German available)"},
-		{name: "rnd", desc: " + num (+ num) OR list of items (seperated by ',') - Will output either a random number between the lowest and highest given number (or between 0 and the given number if only one is given) or output any item of the given list."}
+		{name: cmdChar+"list", desc: " - Displays this list of commands that I am able to execute."},  // list
+		{name: cmdChar+"calc", desc: " + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."},  // calc
+		{name: cmdChar+"rps", desc: " + object of choice ('rock'/'stein', 'paper'/'papier', 'scissors'/'schere') - Play 'Rock, Paper, Scissors' with me! Adding 'score' as a parameter will display your scoreboard with me. (English and German available)"},
+		{name: cmdChar+"rnd", desc: " + num (+ num) OR list of items (seperated by ',') - Will output either a random number between the lowest and highest given number (or between 0 and the given number if only one is given) or output any item of the given list."}
 	];
 
 	var keyWordsArr = {
@@ -348,24 +349,28 @@ function cmdRnd(info) {
 
 	var numArr = sepStr(info).num; var itemArr = sepStr(info, ",").char;
 	var numArr = numArr.sort(function(a,b) {return a-b});
+	var chnce = 0;
 		console.log(numArr);
 		console.log(itemArr);
 
 	if (numArr.length == 0) {
 		// choose from list of items
-		return cmdRndOut(0, 0, itemArr);
+			var chnce = sprintf("%.2f", parseFloat(1 / itemArr.length));
+			var chnce = parseInt(chnce.substring(chnce.search(".") + 2, chnce.length));
+				console.log(chnce);
+		return " (" + chnce + "% chance)\n" + cmdRndOut(0, 0, itemArr);
 
 	} else if (numArr.length == 1) {
 		// random from 0 to num
-		return cmdRndOut(0, numArr[0], "none");
+			var chnce = sprintf("%.2f", parseFloat(1 / (numArr[0] + 1)));
+			var chnce = parseInt(chnce.substring(chnce.search(".") + 2, chnce.length));
+		return " (" + chnce + "% chance)\n" + cmdRndOut(0, numArr[0], "none");
 
-	} else if (numArr.length == 2) {
-		// random from lower num to larger num
-		return cmdRndOut(numArr[0], numArr[1], "none");
-
-	} else if (numArr.length > 2) {
+	} else if (numArr.length >= 2) {
 		// random from lowest num to largest num
-		return cmdRndOut(numArr[0], numArr[numArr.length - 1], "none");
+			var chnce = sprintf("%.2f", parseFloat(1 / (numArr[numArr.length - 1] - numArr[0] + 1)));
+			var chnce = parseInt(chnce.substring(chnce.search(".") + 2, chnce.length));
+		return " (" + chnce + "% chance)\n" + cmdRndOut(numArr[0], numArr[numArr.length - 1], "none");
 	}
 };
 
@@ -437,6 +442,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 		console.log('Message:', message);
 	user = rtm.dataStore.getUserById(message.user);
 	bot = rtm.dataStore.getUserById(rtm.activeUserId);
+	roomID = message.channel;
 
 	inputArr.push(message.text);
 	var lastInput = inputArr[inputArr.length - 1];
@@ -508,7 +514,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 			if (rndTmp == true) {
 				var rndTmp = false;
-				rtm.sendMessage(cmdRnd(rndInfo.substring(7, rndInfo.length)), roomID);
+				rtm.sendMessage("Random Output: " + cmdRnd(rndInfo.substring(7, rndInfo.length)), roomID);
 			}
 
 	} else {
@@ -516,16 +522,18 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 		if (lastInput.search(cmdArr[0].name) != -1) {  // list
 			cmdList();
+		}
 
-		} else if (lastInput.search(cmdArr[1].name) != -1) {  // calculator
+		if (lastInput.search(cmdArr[1].name) != -1) {  // calculator
 			rtm.sendMessage(cmdCalc(lastInput.substring(lastInput.search(cmdArr[1].name) + cmdArr[1].name.length, lastInput.length)), roomID);
+		}
 
-		} else if (lastInput.search(cmdArr[2].name) != -1) {  // rock paper scissors
+		if (lastInput.search(cmdArr[2].name) != -1) {  // rock paper scissors
 			rtm.sendMessage(cmdRps(lastInput.substring(lastInput.search(cmdArr[2].name) + cmdArr[2].name.length, lastInput.length)), roomID);
+		}
 
-		} else if (lastInput.search(cmdArr[3].name) != -1) {  // random
-			rtm.sendMessage(cmdRnd(lastInput.substring(lastInput.search(cmdArr[3].name) + cmdArr[3].name.length, lastInput.length)), roomID);
-
+		if (lastInput.search(cmdArr[3].name) != -1) {  // random
+			rtm.sendMessage("Random Output: " + cmdRnd(lastInput.substring(lastInput.search(cmdArr[3].name) + cmdArr[3].name.length, lastInput.length)), roomID);
 		}
 	}
 });
