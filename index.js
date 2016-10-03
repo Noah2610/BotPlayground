@@ -98,20 +98,56 @@ function cmdList() {
 };
 
 
-function sepStr(info) {
+function sepStr(info, xtrSep) {
+	if (xtrSep != null) {
+		var xtrSepActive = true;
+	} else {
+		var xtrSepActive = false;
+	}
+
+		var info = info.replace(/ /g, "");
 		var numArr = []; var charArr = [];
-		var numStart = 0; var numEnd = 0;
+		var posStart = {num: 0, char: 0}; var posEnd = {num: 0, char: 0};
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-		if (isNaN(curChar)) {
-			numArr.push(parseFloat(info.substring(numStart, numEnd + 1)));
-			charArr.push(curChar);
-				numStart = count + 1;
-				numEnd = count + 1;
-		} else if (count + 1 === info.length) {
-			numArr.push(parseFloat(info.substring(numStart, numEnd + 2)));
-		} else {
-			numEnd = count;
+		if (xtrSepActive == true && curChar.search(xtrSep) != -1) {
+			if (!isNaN(info.substring(posStart.num, posEnd.num + 1))) {
+				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
+			}
+			charArr.push(info.substring(posStart.char, posEnd.char + 1));
+				posStart.num = count + 1;
+				posEnd.num = count + 1;
+				posStart.char = count + 1;
+				posEnd.char = count + 1;
+
+		} else if (isNaN(curChar) && count + 1 !== info.length) {  // if is char
+			if (!isNaN(info.substring(posStart.num, posEnd.num + 1))) {
+				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
+					// posStart.char = count;
+			}
+				posStart.num = count + 1;
+				posEnd.num = count + 1;
+				posEnd.char = count;
+
+		} else if (count + 1 === info.length) {  // last for run
+			if (!isNaN(info.substring(posStart.num, posEnd.num + 2))) {
+				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 2)));
+				// charArr.push(info.substring(posStart.char, posEnd.char + 1));
+			} else if (isNaN(info.substring(posStart.num, posEnd.num + 2))) {
+				charArr.push(info.substring(posStart.char, posEnd.char + 2));
+				// numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
+			} else {
+				// numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
+				charArr.push(info.substring(posStart.char, posEnd.char + 1));
+			}
+
+		} else {  // if is num
+			if (isNaN(info.substring(posStart.char, posEnd.char + 1))) {
+				charArr.push(info.substring(posStart.char, posEnd.char + 1));
+			}
+				posEnd.num = count;
+				posStart.char = count + 1;
+				posEnd.char = count + 1;
 		}
 	}
 
@@ -120,7 +156,7 @@ function sepStr(info) {
 
 
 function cmdCalc(info) {
-	var info = info.replace(/ /g, "");
+	// var info = info.replace(/ /g, "");
 	var numArr = sepStr(info).num;
 	var opArr = sepStr(info).char;
 		console.log(numArr);
@@ -131,6 +167,8 @@ function cmdCalc(info) {
 		}
 	}
 
+		console.log(numArr);
+		console.log(opArr);
 	if (parseInt(numArr.length - 1) != parseInt(opArr.length)) {
 		return "I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:";
 	}
@@ -305,8 +343,41 @@ function cmdRps(input, lang) {
 };
 
 
-function cmdRnd(min, max, itemArr) {
+function cmdRnd(info) {
 
+	var numArr = sepStr(info).num; var itemArr = sepStr(info, ",").char;
+	var numArr = numArr.sort(function(a,b) {return a-b});
+		console.log(numArr);
+		console.log(itemArr);
+
+	if (numArr.length == 0) {
+		// choose from list of items
+		return cmdRndOut(0, 0, itemArr);
+
+	} else if (numArr.length == 1) {
+		// random from 0 to num
+		return cmdRndOut(0, numArr[0], "none");
+
+	} else if (numArr.length == 2) {
+		// random from lower num to larger num
+		return cmdRndOut(numArr[0], numArr[1], "none");
+
+	} else if (numArr.length > 2) {
+		// random from lowest num to largest num
+		return cmdRndOut(numArr[0], numArr[numArr.length - 1], "none");
+	}
+};
+
+function cmdRndOut(min, max, itemArr) {
+	if (itemArr != "none") {
+			var tmp = Math.round(Math.random() * itemArr.length - 1);
+			console.log(tmp);
+		return itemArr[tmp];
+
+	} else {
+		return parseInt(Math.round(min + Math.random() * (max - min))).toString();
+
+	}
 };
 
 
@@ -382,19 +453,19 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
 				// calcTmp = false;  // stop
 			}
-			var inputTmp = inputArr[inputArr.length - 1][count].replace(/[,.!?;]/g, "").toLowerCase();
+			var inputTmp = inputArr[inputArr.length - 1][count].toLowerCase();
 
 			for (var countKeys = 0; countKeys < keyWordsArr.maxLength; countKeys++) {  // compare with key words
 
-				if (inputTmp == keyWordsArr.hello[countKeys]) {  // hello
+				if (inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.hello[countKeys]) {  // hello
 					rtm.sendMessage("Hello, " + user.name + "!\nMy name is " + bot.name + "!\n", roomID);
 
-				} else if (calcTmp || inputTmp == keyWordsArr.calc[countKeys]) {  // calculate
+				} else if (calcTmp || inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.calc[countKeys]) {  // calculate
 					var calcTmp = true;
 					var infoTmp = infoTmp + inputTmp.replace(/[a-zA-Z]/g, "");
 						break;
 
-				} else if (inputTmp == keyWordsArr.date[countKeys]) {  // date
+				} else if (inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.date[countKeys]) {  // date
 						var numExt = "";
 					if (parseInt(curDate("d")[curDate("d").length - 1]) === 1 && parseInt(curDate("d")) != 11) {  // 1st
 						var numExt = "st";
@@ -407,7 +478,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 					}
 					rtm.sendMessage("Today is a " + curDate("W") + " and it's the " + curDate("d").replace(/0/g, "") + numExt + " of " + curDate("f, Y") + ".\n" + curDate("W, d.m.Y"), roomID);
 
-				} else if (inputTmp == keyWordsArr.time[countKeys]) {  // time
+				} else if (inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.time[countKeys]) {  // time
 					rtm.sendMessage("It's " + curDate("H:M:S"), roomID);
 
 				} else if (rndTmp || inputTmp == keyWordsArr.rnd[countKeys]) {  // random
@@ -436,24 +507,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 			if (rndTmp == true) {
 				var rndTmp = false;
-				var numArr = sepStr(rndInfo).num;
-				var itemArr = sepStr(rndInfo).char;
-					console.log(itemArr);
-					console.log(numArr);
-					console.log(numArr.length);
-
-				if (numArr.length == 0) {
-					// choose from list of items
-
-				} else if (numArr.length == 1) {
-					// random from 0 to num
-
-				} else if (numArr.length == 2) {
-					// random from lower num to larger num
-
-				} else if (numArr.length > 2) {
-					// random from lowest num to largest num
-				}
+				rtm.sendMessage(cmdRnd(rndInfo.substring(7, rndInfo.length)), roomID);
 			}
 
 	} else {
