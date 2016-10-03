@@ -45,6 +45,7 @@ var rtm = new RtmClient(token, {
 		{name: "list", desc: " - Displays this list of commands that I am able to execute."},  // list
 		{name: "calc", desc: " + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."},  // calc
 		{name: "rps", desc: " + object of choice ('rock'/'stein', 'paper'/'papier', 'scissors'/'schere') - Play 'Rock, Paper, Scissors' with me! Adding 'score' as a parameter will display your scoreboard with me. (English and German available)"},
+		{name: "rnd", desc: " + num (+ num) OR list of items (seperated by ',') - Will output either a random number between the lowest and highest given number (or between 0 and the given number if only one is given) or output any item of the given list."}
 	];
 
 	var keyWordsArr = {
@@ -521,6 +522,10 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 		} else if (lastInput.search(cmdArr[2].name) != -1) {  // rock paper scissors
 			rtm.sendMessage(cmdRps(lastInput.substring(lastInput.search(cmdArr[2].name) + cmdArr[2].name.length, lastInput.length)), roomID);
+
+		} else if (lastInput.search(cmdArr[3].name) != -1) {  // random
+			rtm.sendMessage(cmdRnd(lastInput.substring(lastInput.search(cmdArr[3].name) + cmdArr[3].name.length, lastInput.length)), roomID);
+
 		}
 	}
 });
