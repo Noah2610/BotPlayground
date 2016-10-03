@@ -52,7 +52,8 @@ var rtm = new RtmClient(token, {
 		hello: ["hello", "hi", "hey", "ey"],
 		calc: ["calculate", "evaluate", "solve", "berechne", "ausrechnen"],
 		date: ["date", "today", "day"],
-		time: ["time", "clock"]
+		time: ["time", "clock"],
+		rnd: ["random", "between", "zwischen"]
 	};
 
 	var keyWordsExtArr = {
@@ -87,6 +88,7 @@ function curDate(frmt) {  // get date and/or time with format
 	return datetime.create().format(frmt);
 };
 
+
 function cmdList() {
 		var output = "Every command has to be started with '" + cmdChar + "'.\n";
 	for (var count = 0; count < cmdArr.length; count++) {
@@ -95,22 +97,15 @@ function cmdList() {
 		rtm.sendMessage(output, roomID);
 };
 
-function cmdCalc(info) {
-	var info = info.replace(/ /g, "");
-	var numArr = [];
-	var opArr = [];
-	var prnth = [];  // future function (maybe)
 
+function sepStr(info) {
+		var numArr = []; var charArr = [];
 		var numStart = 0; var numEnd = 0;
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-		if (curChar === "(" || curChar === ")") {  // add paranthesis if found
-			// currently useless, will eventually implement parentheses feature (maybe)
-			prnth.push(curChar);
-		}
-		if (isNaN(curChar) && curChar != "(" && curChar != ")") {
+		if (isNaN(curChar)) {
 			numArr.push(parseFloat(info.substring(numStart, numEnd + 1)));
-			opArr.push(curChar);
+			charArr.push(curChar);
 				numStart = count + 1;
 				numEnd = count + 1;
 		} else if (count + 1 === info.length) {
@@ -119,6 +114,16 @@ function cmdCalc(info) {
 			numEnd = count;
 		}
 	}
+
+		return {num: numArr, char: charArr};
+};
+
+
+function cmdCalc(info) {
+	var info = info.replace(/ /g, "");
+	var numArr = sepStr(info).num;
+	var opArr = sepStr(info).char;
+		console.log(numArr);
 
 	for (var count = 0; count < numArr.length; count++) {  // remove all NaN from numArr
 		if (isNaN(numArr[count])) {
@@ -300,6 +305,11 @@ function cmdRps(input, lang) {
 };
 
 
+function cmdRnd(min, max, itemArr) {
+
+};
+
+
 function nlp(inputTmpArr) {
 	var nlpArr = [];
 	var respArr = {
@@ -366,6 +376,8 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			var infoTmp = "";
 			var calcTmp = false;
 			var checkTmp = 0;
+			var rndTmp = false;
+			var rndInfo = "";
 		for (var count = 0; count < inputArr[inputArr.length - 1].length; count++) {  // check inputs
 			if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
 				// calcTmp = false;  // stop
@@ -388,17 +400,26 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 						var numExt = "st";
 					} else if (parseInt(curDate("d")[curDate("d").length - 1]) === 2 && parseInt(curDate("d")) != 12) {  // 2nd
 						var numExt = "nd";
-					} else if (parseInt(curDate("d")[curDate("d").length - 1]) === 2 && parseInt(curDate("d")) != 12) {  // 3rd
+					} else if (parseInt(curDate("d")[curDate("d").length - 1]) === 3 && parseInt(curDate("d")) != 13) {  // 3rd
 						var numExt = "rd";
 					} else {  // 0th
 						numExt = "th";
 					}
-					rtm.sendMessage("Today is a " + curDate("W") + " and it's the " + curDate("d") + numExt + " of " + curDate("f, Y") + ".\n" + curDate("W, d.m.Y"), roomID);
+					rtm.sendMessage("Today is a " + curDate("W") + " and it's the " + curDate("d").replace(/0/g, "") + numExt + " of " + curDate("f, Y") + ".\n" + curDate("W, d.m.Y"), roomID);
 
 				} else if (inputTmp == keyWordsArr.time[countKeys]) {  // time
 					rtm.sendMessage("It's " + curDate("H:M:S"), roomID);
 
-				} else {  // person
+				} else if (rndTmp || inputTmp == keyWordsArr.rnd[countKeys]) {  // random
+					var rndTmp = true;
+					var rndInfo = rndInfo + " " + inputTmp;
+						break;
+
+				} else if (inputTmp == "test") {  // test
+					rtm.sendMessage("", roomID);
+						break;
+
+				} else {  // nlp
 					var checkTmp = checkTmp + 1;
 				}
 
@@ -411,6 +432,28 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			if (calcTmp == true) {
 				var calcTmp = false;
 				rtm.sendMessage(cmdCalc(infoTmp), roomID);
+			}
+
+			if (rndTmp == true) {
+				var rndTmp = false;
+				var numArr = sepStr(rndInfo).num;
+				var itemArr = sepStr(rndInfo).char;
+					console.log(itemArr);
+					console.log(numArr);
+					console.log(numArr.length);
+
+				if (numArr.length == 0) {
+					// choose from list of items
+
+				} else if (numArr.length == 1) {
+					// random from 0 to num
+
+				} else if (numArr.length == 2) {
+					// random from lower num to larger num
+
+				} else if (numArr.length > 2) {
+					// random from lowest num to largest num
+				}
 			}
 
 	} else {
