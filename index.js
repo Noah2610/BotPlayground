@@ -16,7 +16,7 @@ var MemoryDataStore = require('@slack/client').MemoryDataStore;
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
 
 var url = process.env.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/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';
-var wh = new IncomingWebhook(url);
+var wh = new IncomingWebhook(url, {username: "ray"});
 
 // test area
 
@@ -47,11 +47,22 @@ var rtm = new RtmClient(token, {
 	var cmdChar = "!";
 
 	var cmdArr = [
-		{name: cmdChar+"list", desc: " - Displays this list of commands that I am able to execute."},  // list
-		{name: cmdChar+"calc", desc: " + calculation (ex. '1 + 2 * 3') - I will evaluate the given calculation for you."},  // calc
-		{name: cmdChar+"rps", desc: " + object of choice ('rock'/'stein', 'paper'/'papier', 'scissors'/'schere') - Play 'Rock, Paper, Scissors' with me! Adding 'score' as a parameter will display your scoreboard with me. (English and German available)"},
-		{name: cmdChar+"rnd", desc: " + num (+ num) OR list of items (seperated by ',') - Will output either a random number between the lowest and highest given number (or between 0 and the given number if only one is given) or output any item of the given list."}
+		{name: cmdChar+"list", paras: "", desc: "Displays this list of commands that I am able to execute."},  // list
+		{name: cmdChar+"calc", paras: "+ calculation (ex. '1 + 2 * 3')", desc: "I will evaluate the given calculation for you."},  // calc
+		{name: cmdChar+"rps", paras: "+ object of choice ('rock', 'paper', 'scissors') OR 'score'", desc: "Play 'Rock, Paper, Scissors' with me! Using 'score' as a parameter will display your scoreboard with me. (English and German available)"},
+		{name: cmdChar+"rnd", paras: "+ num (+ num) OR list of items (seperated by ',')", desc: "Will output either a random number between the lowest and highest given number (or between 0 and the given number if only one is given) or output any item of the given list."}
 	];
+
+	var cmdAttArr = {
+		attachments: [
+			{
+				fallback: "fallback text",
+
+				title: "List of commands I can execute:",
+				color: "#7b241c",
+			}
+		]
+	};
 
 	var keyWordsArr = {
 		maxLength: 5,
@@ -97,11 +108,23 @@ function curDate(frmt) {  // get date and/or time with format
 
 
 function cmdList() {
-		var output = "Every command has to be started with '" + cmdChar + "'.\n";
+	// 	var output = "Every command has to be started with '" + cmdChar + "'.\n";
+	// for (var count = 0; count < cmdArr.length; count++) {
+	// 	var output = output + "'" + cmdArr[count].name + "'" + cmdArr[count].desc + "\n";
+	// }
+
 	for (var count = 0; count < cmdArr.length; count++) {
-		var output = output + "'" + cmdArr[count].name + "'" + cmdArr[count].desc + "\n";
+		cmdAttArr.attachments[count + 1] = {color: "#21618c", fields: []};
+		cmdAttArr.attachments[count + 1].fields[0] = {value: ""};
+		cmdAttArr.attachments[count + 1].fields[1] = {title: cmdArr[count].name, short: true};
+		cmdAttArr.attachments[count + 1].fields[2] = {title: cmdArr[count].paras, short: true};
+		cmdAttArr.attachments[count + 1].fields[3] = {value: cmdArr[count].desc};
+		cmdAttArr.attachments[count + 1].fields[4] = {value: ""};
+
+		// cmdAttArr.attachments[count + 1] = {fields: [{title: cmdArr[count].name + "     " + cmdArr[count].paras, value: cmdArr[count].desc, short: true}], color: "#21618c"};
 	}
-		rtm.sendMessage(output, roomID);
+
+	wh.send(cmdAttArr);
 };
 
 
@@ -503,18 +526,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 						break;
 
 				} else if (inputTmp == "test") {  // test
-
-					var att = {
-						"attachments": [
-							{
-								"fallback": "mandatory fallback text",
-								"color": "#922b21",
-								"text": "test text within attachment"
-							}
-						]
-					};
-
-					wh.send(att, roomID);
+					// test stuff goes here
 						break;
 
 				} else {  // nlp
