@@ -20,6 +20,7 @@ var wh = new IncomingWebhook(url, {username: "ray"});
 
 // test area
 
+
 // create 'data' dir if doesn't exist
 // mkdirp("data", function(err) {
 // 	// fs.writeFileSync(tokenDir, "", function (err, fd) {
@@ -570,26 +571,34 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 	}
 });
 
-rtm.on(RTM_EVENTS.USER_TYPING, function userTyping(info) {
-	// if (typeof typeTimeStarted === "undefined" || typeTimeStarted == false) {
-	//
-	// 	typeTimeStarted = true;
-	// 	var timePass = 5;
-	// 	var startTypeTime = parseInt(curDate("S"));
-	// 	if (startTypeTime + timePass > 59) {
-	// 		var endTypeTime = (startTypeTime + timePass) - 59;
-	// 	} else {
-	// 		var endTypeTime = startTypeTime + timePass;
-	// 	}
-	//
-	// } else {
-	// 		var curTime = parseInt(curDate("S"));
-	// 	if (curTime >= endTypeTime && curTime < startTypeTime) {
-	//
-	// 	} else if (curTime )
-	// }
-
-});
+// rtm.on(RTM_EVENTS.USER_TYPING, function userTyping(info) {
+// 	if (typeof roomID !== "undefined") {
+// 		if (typeof typeTimeStarted === "undefined" || typeTimeStarted == false) {
+//
+// 				typeTimeStarted = true;
+// 			var timePass = 5;
+// 			var startTypeTime = [parseInt(curDate("M")), parseInt(curDate("S"))];
+// 				console.log("initiated: " + startTypeTime);
+// 			if (startTypeTime[1] + timePass > 59) {
+// 				endTypeTime = [parseInt(curDate("M") + 1), (startTypeTime[1] + timePass) - 59, true];
+// 			} else {
+// 				endTypeTime = [parseInt(curDate("M")), startTypeTime[1] + timePass, false];
+// 			}
+// 				console.log(endTypeTime)
+//
+// 		} else {
+// 				var curTime = [parseInt(curDate("M")), parseInt(curDate("S"))];
+// 				console.log("checking: " + curTime);
+// 			if (endTypeTime[2] == true && curTime[0] >= endTypeTime[0] && curTime[1] >= endTypeTime[1]) {  // next minute
+// 					typeTimeStarted = false;
+// 				rtm.sendMessage("TEST", roomID);
+// 			} else if (endTypeTime[2] == false && curTime[1] >= endTypeTime[1]) {
+// 					typeTimeStarted = false;
+// 				rtm.sendMessage("TEST", roomID);
+// 			}
+// 		}
+// 	}
+// });
 
 rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
 		console.log('Reaction:', reaction);
