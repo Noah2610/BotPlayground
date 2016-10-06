@@ -13,6 +13,10 @@ var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
 var RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 var MemoryDataStore = require('@slack/client').MemoryDataStore;
+var IncomingWebhook = require('@slack/client').IncomingWebhook;
+
+var url = process.env.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/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';
+var wh = new IncomingWebhook(url);
 
 // test area
 
@@ -51,6 +55,7 @@ var rtm = new RtmClient(token, {
 
 	var keyWordsArr = {
 		maxLength: 5,
+		list: ["list", "help", "commands", "befehle", "hilfe"],
 		hello: ["hello", "hi", "hey", "ey"],
 		calc: ["calculate", "evaluate", "solve", "berechne", "ausrechnen"],
 		date: ["date", "today", "day"],
@@ -444,6 +449,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 	bot = rtm.dataStore.getUserById(rtm.activeUserId);
 	roomID = message.channel;
 
+
 	inputArr.push(message.text);
 	var lastInput = inputArr[inputArr.length - 1];
 
@@ -466,6 +472,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 				if (inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.hello[countKeys]) {  // hello
 					rtm.sendMessage("Hello, " + user.name + "!\nMy name is " + bot.name + "!\n", roomID);
+
+				} else if (inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.list[countKeys]) {  // list
+					cmdList();
 
 				} else if (calcTmp || inputTmp.replace(/[,.!?;]/g, "") == keyWordsArr.calc[countKeys]) {  // calculate
 					var calcTmp = true;
@@ -494,7 +503,18 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 						break;
 
 				} else if (inputTmp == "test") {  // test
-					rtm.sendMessage("", roomID);
+
+					var att = {
+						"attachments": [
+							{
+								"fallback": "mandatory fallback text",
+								"color": "#922b21",
+								"text": "test text within attachment"
+							}
+						]
+					};
+
+					wh.send(att, roomID);
 						break;
 
 				} else {  // nlp
@@ -536,6 +556,27 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			rtm.sendMessage("Random Output: " + cmdRnd(lastInput.substring(lastInput.search(cmdArr[3].name) + cmdArr[3].name.length, lastInput.length)), roomID);
 		}
 	}
+});
+
+rtm.on(RTM_EVENTS.USER_TYPING, function userTyping(info) {
+	// if (typeof typeTimeStarted === "undefined" || typeTimeStarted == false) {
+	//
+	// 	typeTimeStarted = true;
+	// 	var timePass = 5;
+	// 	var startTypeTime = parseInt(curDate("S"));
+	// 	if (startTypeTime + timePass > 59) {
+	// 		var endTypeTime = (startTypeTime + timePass) - 59;
+	// 	} else {
+	// 		var endTypeTime = startTypeTime + timePass;
+	// 	}
+	//
+	// } else {
+	// 		var curTime = parseInt(curDate("S"));
+	// 	if (curTime >= endTypeTime && curTime < startTypeTime) {
+	//
+	// 	} else if (curTime )
+	// }
+
 });
 
 rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
