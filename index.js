@@ -16,10 +16,10 @@ var MemoryDataStore = require('@slack/client').MemoryDataStore;
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
 
 var url = process.env.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/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';
-var wh = new IncomingWebhook(url, {username: "ray"});
+var wh = new IncomingWebhook(url, {username: "ray", icon: ":robot_face:"});
 
 // test area
-
+// console.log(isNum("10"));
 
 // create 'data' dir if doesn't exist
 // mkdirp("data", function(err) {
@@ -43,7 +43,6 @@ var rtm = new RtmClient(token, {
 	dataStore: new MemoryDataStore()
 });
 
-	// var roomID = "D2CDJJQ66";
 	var inputArr = [];
 	var cmdChar = "!";
 
@@ -103,6 +102,15 @@ var rtm = new RtmClient(token, {
 	});
 
 
+function isNum(info) {
+	if (info == Number(info)) {
+		return true;
+	} else {
+		return false;
+	}
+};
+
+
 function curDate(frmt) {  // get date and/or time with format
 	return datetime.create().format(frmt);
 };
@@ -137,48 +145,56 @@ function sepStr(info, xtrSep) {
 	}
 
 		var info = info.replace(/ /g, "");
+			console.log(info);
 		var numArr = []; var charArr = [];
-		var posStart = {num: 0, char: 0}; var posEnd = {num: 0, char: 0};
+		// var posStart = {num: 0, char: 0}; var posEnd = {num: 0, char: 0};
+		var numPos = {start: 0, end: 0}; var charPos = {start: 0, end: 0};
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-		if (xtrSepActive == true && curChar.search(xtrSep) != -1) {
-			if (!isNaN(info.substring(posStart.num, posEnd.num + 1))) {
-				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
-			}
-			charArr.push(info.substring(posStart.char, posEnd.char + 1));
-				posStart.num = count + 1;
-				posEnd.num = count + 1;
-				posStart.char = count + 1;
-				posEnd.char = count + 1;
+				console.log(count + ": " + curChar);
 
-		} else if (isNaN(curChar) && count + 1 !== info.length) {  // if is char
-			if (!isNaN(info.substring(posStart.num, posEnd.num + 1))) {
-				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
-					// posStart.char = count;
-			}
-				posStart.num = count + 1;
-				posEnd.num = count + 1;
-				posEnd.char = count;
+				// add xtrSepActive if case like in previous state
+				// something with bunching a couple chars together still doesn't work...
 
-		} else if (count + 1 === info.length) {  // last for run
-			if (!isNaN(info.substring(posStart.num, posEnd.num + 2))) {
-				numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 2)));
-				// charArr.push(info.substring(posStart.char, posEnd.char + 1));
-			} else if (isNaN(info.substring(posStart.num, posEnd.num + 2))) {
-				charArr.push(info.substring(posStart.char, posEnd.char + 2));
-				// numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
-			} else {
-				// numArr.push(parseFloat(info.substring(posStart.num, posEnd.num + 1)));
-				charArr.push(info.substring(posStart.char, posEnd.char + 1));
-			}
+		if (isNum(info.substring(numPos.start, count + 1))) {  // check num
+					console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
+				if (count == info.length - 1) {  // last run
+					numArr.push(parseFloat(info.substring(numPos.start, count + 1)));
+						console.log("TEST: " + charPos.start + " " + charPos.end);
+					// charArr.push(info.substring(charPos.start, charPos.end));
+						// break;
+				}
+			numPos.end = count + 1;
+			// charPos.start = count + 1;
 
-		} else {  // if is num
-			if (isNaN(info.substring(posStart.char, posEnd.char + 1))) {
-				charArr.push(info.substring(posStart.char, posEnd.char + 1));
-			}
-				posEnd.num = count;
-				posStart.char = count + 1;
-				posEnd.char = count + 1;
+		} else if (!isNum(curChar) && numPos.start < numPos.end) {  // save num
+			numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
+				console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
+			numPos.start = count + 1;
+			numPos.end = 0;
+			charPos.start = count;
+			// charPos.end = 0;  // maybe
+
+		}
+
+		if (!isNum(curChar) /*&& isNaN(info.substring(charPos.start, count + 1) && charPos.start != charPos.end*/) {  // check string
+					console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
+				if (count == info.length - 1) {  // last run
+					charArr.push(info.substring(charPos.start, count + 1));
+					// numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
+						// break;
+				}
+			charPos.end = count + 1;
+			// numPos.start = count + 1;
+
+		} else if (isNum(curChar) && charPos.start < charPos.end) {  // save string
+			charArr.push(info.substring(charPos.start, charPos.end));
+				console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
+			charPos.start = count + 1;
+			charPos.end = 0;
+			numPos.start = count;
+			// numPos.end = 0;
+
 		}
 	}
 
@@ -188,9 +204,11 @@ function sepStr(info, xtrSep) {
 
 function cmdCalc(info) {
 	// var info = info.replace(/ /g, "");
-	var numArr = sepStr(info).num;
-	var opArr = sepStr(info).char;
+	var tmpArr = sepStr(info);
+	var numArr = tmpArr.num;
+	var opArr = tmpArr.char;
 		console.log(numArr);
+		console.log(opArr);
 
 	for (var count = 0; count < numArr.length; count++) {  // remove all NaN from numArr
 		if (isNaN(numArr[count])) {
@@ -198,8 +216,6 @@ function cmdCalc(info) {
 		}
 	}
 
-		console.log(numArr);
-		console.log(opArr);
 	if (parseInt(numArr.length - 1) != parseInt(opArr.length)) {
 		return "I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:";
 	}
@@ -286,19 +302,21 @@ function cmdRps(input, lang) {
 	for (var count = 0; count < rpsScoreArr.length; count++) {
 		if (rpsScoreArr[count].search(roomID) != -1) {
 			var rpsScoreTmpArr = [
-				rpsScoreArr[count].substring(rpsScoreArr[count].search(":") + 1, rpsScoreArr[count].search(",")),
-				rpsScoreArr[count].substring(rpsScoreArr[count].search(",") + 1, rpsScoreArr[count].length)
+				parseInt(rpsScoreArr[count].substring(rpsScoreArr[count].search(":") + 1, rpsScoreArr[count].search(","))),
+				parseInt(rpsScoreArr[count].substring(rpsScoreArr[count].search(",") + 1, rpsScoreArr[count].length))
 			];
-			rpsScoreArr.splice(count,1);
+			console.log(rpsScoreTmpArr);
+				break;
 		}
 	}
 		if (!rpsScoreTmpArr) {
-			var rpsScoreTmpArr = ["0","0"];
+			var newScore = true;
+			var rpsScoreTmpArr = [0,0];
 		}
 
 	var input = input.replace(" ", "").toLowerCase();
 
-		if (input == "score") {
+		if (input == "score") {  // display score
 			winForm = [];
 
 			var winForm = rpsScoreTmpArr.map(function (x) {
@@ -365,7 +383,15 @@ function cmdRps(input, lang) {
 		return objArr[lang].tie;
 	}
 
-	rpsScoreArr.push(roomID + ":" + rpsScoreTmpArr[0] + "," + rpsScoreTmpArr[1]);
+	if (newScore == true) {
+		rpsScoreArr.push(roomID + ":" + rpsScoreTmpArr[0] + "," + rpsScoreTmpArr[1]);
+	} else {
+		for (var count = 0; count < rpsScoreArr.length; count++) {
+			if (rpsScoreArr[count].search(roomID) != -1) {
+				rpsScoreArr[count] = roomID + ":" + rpsScoreTmpArr[0] + "," + rpsScoreTmpArr[1];
+			}
+		}
+	}
 
 	fs.writeFile(rpsDir, rpsScoreArr.join("\n"));
 
@@ -405,12 +431,12 @@ function cmdRnd(info) {
 
 function cmdRndOut(min, max, itemArr) {
 	if (itemArr != "none") {
-			var tmp = Math.round(Math.random() * itemArr.length - 1);
+			var tmp = Math.floor(Math.random() * (itemArr.length));
 			console.log(tmp);
 		return itemArr[tmp];
 
 	} else {
-		return parseInt(Math.round(min + Math.random() * (max - min))).toString();
+		return parseInt(Math.floor(Math.random() * max) + min).toString();
 
 	}
 };
@@ -528,6 +554,10 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 				} else if (inputTmp == "test") {  // test
 					// test stuff goes here
+					// rtm.sendMessage("*test*", roomID);
+					// wh.send("*test*");
+					console.log(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
+					wh.send(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
 						break;
 
 				} else {  // nlp
@@ -571,7 +601,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 	}
 });
 
-// rtm.on(RTM_EVENTS.USER_TYPING, function userTyping(info) {
+rtm.on(RTM_EVENTS.USER_TYPING, function userTyping(info) {
+	// console.log(info);
+
 // 	if (typeof roomID !== "undefined") {
 // 		if (typeof typeTimeStarted === "undefined" || typeTimeStarted == false) {
 //
@@ -598,7 +630,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 // 			}
 // 		}
 // 	}
-// });
+});
 
 rtm.on(RTM_EVENTS.REACTION_ADDED, function handleRtmReactionAdded(reaction) {
 		console.log('Reaction:', reaction);
