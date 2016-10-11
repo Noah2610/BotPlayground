@@ -16,10 +16,9 @@ var MemoryDataStore = require('@slack/client').MemoryDataStore;
 var IncomingWebhook = require('@slack/client').IncomingWebhook;
 
 var url = process.env.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/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';
-var wh = new IncomingWebhook(url, {username: "ray", icon: ":robot_face:"});
+var wh = new IncomingWebhook(url, {username: "ray", iconEmoji: ":robot_face:"});
 
 // test area
-// console.log(isNum("10"));
 
 // create 'data' dir if doesn't exist
 // mkdirp("data", function(err) {
@@ -142,6 +141,7 @@ function sepStr(info, xtrSep) {
 		var xtrSepActive = true;
 	} else {
 		var xtrSepActive = false;
+		var xtrSep = null;
 	}
 
 		var info = info.replace(/ /g, "");
@@ -151,14 +151,14 @@ function sepStr(info, xtrSep) {
 		var numPos = {start: 0, end: 0}; var charPos = {start: 0, end: 0};
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-				// console.log(count + ": " + curChar);
+				console.log(count + ": " + curChar);
 
 			if (isNum(curChar) && !isNum(info.substring(numPos.start, count + 1))) {  // check num (only curChar)
 				numPos.start = count;
 			}
 
 		if (isNum(info.substring(numPos.start, count + 1))) {  // check num
-					// console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
+					console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
 				if (count == info.length - 1) {  // last run
 					numArr.push(parseFloat(info.substring(numPos.start, count + 1)));
 				}
@@ -166,15 +166,15 @@ function sepStr(info, xtrSep) {
 
 		} else if (!isNum(curChar) && numPos.start < numPos.end || curChar.search(xtrSep) != -1 && numPos.start < numPos.end) {  // save num
 			numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
-				// console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
+				console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
 			numPos.start = count + 1;
 			numPos.end = 0;
 			charPos.start = count;
 
 		}
 
-		if (!isNum(curChar) && curChar.search(xtrSep) == -1) {  // check string
-					// console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
+		if (curChar != "." && !isNum(curChar) && curChar.search(xtrSep) == -1) {  // check string
+					console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
 				if (count == info.length - 1) {  // last run
 					charArr.push(info.substring(charPos.start, count + 1));
 				}
@@ -182,7 +182,7 @@ function sepStr(info, xtrSep) {
 
 		} else if (isNum(curChar) && charPos.start < charPos.end || curChar.search(xtrSep) != -1 && charPos.start < charPos.end) {  // save string
 			charArr.push(info.substring(charPos.start, charPos.end));
-				// console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
+				console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
 			charPos.start = count + 1;
 			charPos.end = 0;
 			numPos.start = count;
@@ -397,14 +397,13 @@ function cmdRnd(info) {
 	var numArr = sepStr(info).num; var itemArr = sepStr(info, ",").char;
 	var numArr = numArr.sort(function(a,b) {return a-b});
 	var chnce = 0;
-		console.log(numArr);
-		console.log(itemArr);
+		// console.log(numArr);
+		// console.log(itemArr);
 
 	if (numArr.length == 0) {
 		// choose from list of items
 			var chnce = sprintf("%.2f", parseFloat(1 / itemArr.length));
 			var chnce = parseInt(chnce.substring(chnce.search(".") + 2, chnce.length));
-				console.log(chnce);
 		return " (" + chnce + "% chance)\n" + cmdRndOut(0, 0, itemArr);
 
 	} else if (numArr.length == 1) {
@@ -424,11 +423,10 @@ function cmdRnd(info) {
 function cmdRndOut(min, max, itemArr) {
 	if (itemArr != "none") {
 			var tmp = Math.floor(Math.random() * (itemArr.length));
-			console.log(tmp);
-		return itemArr[tmp];
+		return "*" + itemArr[tmp] + "*";
 
 	} else {
-		return parseInt(Math.floor(Math.random() * max) + min).toString();
+		return "*" + parseInt(Math.floor(Math.random() * max) + min).toString() + "*";
 
 	}
 };
@@ -497,18 +495,18 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 	if (lastInput.search(cmdChar) == -1) {  // if no cmd char is found
 
-		inputArr.push(lastInput.split(" "));
+		var inputLastArr = lastInput.split(" ");
 
 			var infoTmp = "";
 			var calcTmp = false;
 			var checkTmp = 0;
 			var rndTmp = false;
 			var rndInfo = "";
-		for (var count = 0; count < inputArr[inputArr.length - 1].length; count++) {  // check inputs
+		for (var count = 0; count < inputLastArr.length; count++) {  // check inputs
 			if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
 				// calcTmp = false;  // stop
 			}
-			var inputTmp = inputArr[inputArr.length - 1][count].toLowerCase();
+			var inputTmp = inputLastArr[count].toLowerCase();
 
 			for (var countKeys = 0; countKeys < keyWordsArr.maxLength; countKeys++) {  // compare with key words
 
@@ -550,6 +548,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 					// wh.send("*test*");
 					console.log(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
 					wh.send(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
+					wh.send(inputArr)
 						break;
 
 				} else {  // nlp
