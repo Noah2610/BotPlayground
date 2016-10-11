@@ -151,49 +151,41 @@ function sepStr(info, xtrSep) {
 		var numPos = {start: 0, end: 0}; var charPos = {start: 0, end: 0};
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-				console.log(count + ": " + curChar);
+				// console.log(count + ": " + curChar);
 
-				// add xtrSepActive if case like in previous state
-				// something with bunching a couple chars together still doesn't work...
+			if (isNum(curChar) && !isNum(info.substring(numPos.start, count + 1))) {  // check num (only curChar)
+				numPos.start = count;
+			}
 
 		if (isNum(info.substring(numPos.start, count + 1))) {  // check num
-					console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
+					// console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
 				if (count == info.length - 1) {  // last run
 					numArr.push(parseFloat(info.substring(numPos.start, count + 1)));
-						console.log("TEST: " + charPos.start + " " + charPos.end);
-					// charArr.push(info.substring(charPos.start, charPos.end));
-						// break;
 				}
 			numPos.end = count + 1;
-			// charPos.start = count + 1;
 
-		} else if (!isNum(curChar) && numPos.start < numPos.end) {  // save num
+		} else if (!isNum(curChar) && numPos.start < numPos.end || curChar.search(xtrSep) != -1 && numPos.start < numPos.end) {  // save num
 			numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
-				console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
+				// console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
 			numPos.start = count + 1;
 			numPos.end = 0;
 			charPos.start = count;
-			// charPos.end = 0;  // maybe
 
 		}
 
-		if (!isNum(curChar) /*&& isNaN(info.substring(charPos.start, count + 1) && charPos.start != charPos.end*/) {  // check string
-					console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
+		if (!isNum(curChar) && curChar.search(xtrSep) == -1) {  // check string
+					// console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
 				if (count == info.length - 1) {  // last run
 					charArr.push(info.substring(charPos.start, count + 1));
-					// numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
-						// break;
 				}
 			charPos.end = count + 1;
-			// numPos.start = count + 1;
 
-		} else if (isNum(curChar) && charPos.start < charPos.end) {  // save string
+		} else if (isNum(curChar) && charPos.start < charPos.end || curChar.search(xtrSep) != -1 && charPos.start < charPos.end) {  // save string
 			charArr.push(info.substring(charPos.start, charPos.end));
-				console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
+				// console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
 			charPos.start = count + 1;
 			charPos.end = 0;
 			numPos.start = count;
-			// numPos.end = 0;
 
 		}
 	}
