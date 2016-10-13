@@ -4,10 +4,11 @@
 
 /* eslint no-console:0 */
 
+require("regex");
 var fs = require('fs');
 var mkdirp = require('mkdirp');
 var datetime = require("node-datetime");
-var sprintf = require("sprintf-js").sprintf;
+var sprintf = require("sprintf").sprintf;
 var RtmClient = require('@slack/client').RtmClient;
 var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
@@ -247,6 +248,10 @@ function cmdCalc(info, numArr, opArr) {
 						break;
 				}
 			}
+			
+				if (countOpLvl == 0) {
+					var skip = true;
+				}
 
 				if (countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
 					var prnthTmp = count;
@@ -539,9 +544,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			var rndTmp = false;
 			var rndInfo = "";
 		for (var count = 0; count < inputLastArr.length; count++) {  // check inputs
-			if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
+			// if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
 				// calcTmp = false;  // stop
-			}
+			// }
 			var inputTmp = inputLastArr[count].toLowerCase();
 
 			for (var countKeys = 0; countKeys < keyWordsArr.maxLength; countKeys++) {  // compare with key words
