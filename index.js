@@ -249,9 +249,9 @@ function cmdCalc(info, numArr, opArr) {
 				}
 			}
 			
-				if (countOpLvl == 0) {
-					var skip = true;
-				}
+					if (countOpLvl == 0) {
+						var skip = true;
+					}
 
 				if (countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
 					var prnthTmp = count;
