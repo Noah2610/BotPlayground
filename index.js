@@ -194,64 +194,100 @@ function sepStr(info, xtrSep) {
 };
 
 
-function cmdCalc(info) {
+function cmdCalc(info, numArr, opArr) {
 	// var info = info.replace(/ /g, "");
-	var tmpArr = sepStr(info);
-	var numArr = tmpArr.num;
-	var opArr = tmpArr.char;
+	if (!numArr && !opArr) {
+		var tmpArr = sepStr(info);
+		var numArr = tmpArr.num;
+		var opArr = tmpArr.char;
+	}
+	var ops = /[+\"-\"*x/:()]/;
 		console.log(numArr);
 		console.log(opArr);
 
-	for (var count = 0; count < numArr.length; count++) {  // remove all NaN from numArr
+	for (var count = 0; count < numArr.length; count++) {  // remove all NaN from numArr - should be obsolete now
 		if (isNaN(numArr[count])) {
 			numArr.splice(count, 1);
 		}
 	}
 
-	if (parseInt(numArr.length - 1) != parseInt(opArr.length)) {
-		return "I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:";
+			// PROBLEM LIES HERE
+		var tmpArr = opArr.filter(function (x) {
+			return x.search(/[()]/);
+		})
+			console.log(tmpArr);
+	if (parseInt(numArr.length - 1) != parseInt(tmpArr.length)) {  // check if calculation is possible
+		return ["I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:", "ERROR", "ERROR"];
 	}
 
 		var res = 0; var op = ""; replNum = 0;
 		var lvl2ops = /[*x/:]/; var skip = false;
+		var prnthTmp = -1; var returnTmpArr = [];
+		var numTmpArr = []; var opTmpArr = [];
 
-	for (var countOpLvl = 0; countOpLvl < 2; countOpLvl++) {
+	for (var countOpLvl = -1; countOpLvl < 3; countOpLvl++) {
 		for (var count = 0; count < opArr.length; count++) {
 
 			var curOp = opArr[count];
-			if (op == "") {
-				var op = numArr[count];
-			}
+				if (op == "") {
+					var op = numArr[count];
+				}
 
 			for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
-				if (numArr[countAssign] != "") {
+				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
 					var curNum = parseFloat(numArr[countAssign]);
 					var countCurNum = countAssign;
 						break;
 				}
 			}
 			for (var countAssign = count; countAssign >= 0; countAssign--) {  // assign prevNum
-				if (numArr[countAssign] != "") {
+				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
 					var prevNum = parseFloat(numArr[countAssign]);
 					var countPrevNum = countAssign;
 						break;
 				}
 			}
 
-				if (countOpLvl == 0 && curOp.search(lvl2ops) == -1) {
-						skip = true;
-				} else if (countOpLvl == 1 && curOp.search(lvl2ops) != -1) {
-						skip = true;
+				if (countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
+					var prnthTmp = count;
+						console.log("FOUND 1");
+
+				} else if (countOpLvl == 0 && curOp.search(/[)]/g) != -1) {  // check for ')'
+							console.log("FOUND 2");
+						opArr[prnthTmp] = opArr[prnthTmp].replace("(", "");
+					for (var countPrnth = prnthTmp + 1; countPrnth <= count; countPrnth++) {
+						numTmpArr.push(numArr[count]);
+						opTmpArr.push(opArr[count].replace(")", ""));
+
+						numArr.splice(countPrnth, 1, "");
+						if (countPrnth < count) {
+							opArr.splice(countPrnth, 1, "");
+						} else {
+							opArr[countPrnth] = opArr[countPrnth].replace(")", "");
+						}
+					}
+
+						console.log(numTmpArr);
+						console.log(opTmpArr);
+
+					numArr[prnthTmp + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+
 				}
 
-				if (countOpLvl == 0) {
+
+				if (countOpLvl == 1 && curOp.search(lvl2ops) == -1) {
+						var skip = true;
+				} else if (countOpLvl == 2 && curOp.search(lvl2ops) != -1) {
+						var skip = true;
+
+				} else if (countOpLvl == -1) {
 					var op = op + " " + curOp + " " + curNum;
+					var skip = true;
 				}
 
 			if (skip == false) {
 				switch (curOp) {  // check calculation methods
 					case "+":
-							console.log(curNum);
 						numArr.splice(countPrevNum, 1, parseFloat(prevNum + curNum));
 							break;
 					case "-":
@@ -266,7 +302,7 @@ function cmdCalc(info) {
 						numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
 							break;
 					default:
-						return "I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:";
+						return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
 				}
 					numArr.splice(countCurNum, 1, "");
 			} else if (skip == true) {
@@ -276,7 +312,7 @@ function cmdCalc(info) {
 		}
 	}
 
-	op = op + " = ";
+	var op = op + " = ";
 	for (var count = 0; count < numArr.length; count++) {
 		if (!isNaN(numArr[count]) && numArr[count] != "") {
 			var res = numArr[count];
@@ -284,7 +320,7 @@ function cmdCalc(info) {
 		}
 	}
 
-	return op + res;
+	return [op + res, res, op];
 
 };
 
@@ -561,12 +597,12 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 				rtm.sendMessage(nlp(inputArr[inputArr.length - 1]), roomID);
 			}
 
-			if (calcTmp == true) {
+			if (calcTmp == true) {  // calculate
 				var calcTmp = false;
-				rtm.sendMessage(cmdCalc(infoTmp), roomID);
+				rtm.sendMessage(cmdCalc(infoTmp)[0], roomID);
 			}
 
-			if (rndTmp == true) {
+			if (rndTmp == true) {  // random
 				var rndTmp = false;
 				rtm.sendMessage("Random Output: " + cmdRnd(rndInfo.substring(7, rndInfo.length)), roomID);
 			}
@@ -579,7 +615,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 		}
 
 		if (lastInput.search(cmdArr[1].name) != -1) {  // calculator
-			rtm.sendMessage(cmdCalc(lastInput.substring(lastInput.search(cmdArr[1].name) + cmdArr[1].name.length, lastInput.length)), roomID);
+			rtm.sendMessage(cmdCalc(lastInput.substring(lastInput.search(cmdArr[1].name) + cmdArr[1].name.length, lastInput.length))[0], roomID);
 		}
 
 		if (lastInput.search(cmdArr[2].name) != -1) {  // rock paper scissors
