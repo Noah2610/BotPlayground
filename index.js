@@ -266,6 +266,11 @@ function cmdCalc(info, numArr, opArr) {
 							break;
 					}
 				}
+			}
+
+					if (countOpLvl == 0) {
+						var skip = true;
+					}
 
 						if (prnthLoop == true) {
 							var skip = true;
