@@ -145,20 +145,20 @@ function sepStr(info, xtrSep) {
 	}
 
 		var info = info.replace(/ /g, "");
-			console.log(info);
+			// console.log(info);
 		var numArr = []; var charArr = [];
 		// var posStart = {num: 0, char: 0}; var posEnd = {num: 0, char: 0};
 		var numPos = {start: 0, end: 0}; var charPos = {start: 0, end: 0};
 	for (var count = 0; count < info.length; count++) {
 			var curChar = info[count];
-				console.log(count + ": " + curChar);
+				// console.log(count + ": " + curChar);
 
 			if (isNum(curChar) && !isNum(info.substring(numPos.start, count + 1))) {  // check num (only curChar)
 				numPos.start = count;
 			}
 
 		if (isNum(info.substring(numPos.start, count + 1))) {  // check num
-					console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
+					// console.log(count + ": " + info.substring(numPos.start, count + 1) + " IS num - N: start: " + numPos.start + "  end: " + numPos.end);
 				if (count == info.length - 1) {  // last run
 					numArr.push(parseFloat(info.substring(numPos.start, count + 1)));
 				}
@@ -166,7 +166,7 @@ function sepStr(info, xtrSep) {
 
 		} else if (!isNum(curChar) && numPos.start < numPos.end || curChar.search(xtrSep) != -1 && numPos.start < numPos.end) {  // save num
 			numArr.push(parseFloat(info.substring(numPos.start, numPos.end)));
-				console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
+				// console.log(count + ": SAVE num - " + numArr[numArr.length - 1] + " - N: start: " + numPos.start + "  end: " + numPos.end);
 			numPos.start = count + 1;
 			numPos.end = 0;
 			charPos.start = count;
@@ -174,7 +174,7 @@ function sepStr(info, xtrSep) {
 		}
 
 		if (curChar != "." && !isNum(curChar) && curChar.search(xtrSep) == -1) {  // check string
-					console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
+					// console.log(count + ": " + info.substring(charPos.start, count + 1) + " IS string - S: start: " + charPos.start + "  end: " + charPos.end);
 				if (count == info.length - 1) {  // last run
 					charArr.push(info.substring(charPos.start, count + 1));
 				}
@@ -182,7 +182,7 @@ function sepStr(info, xtrSep) {
 
 		} else if (isNum(curChar) && charPos.start < charPos.end || curChar.search(xtrSep) != -1 && charPos.start < charPos.end) {  // save string
 			charArr.push(info.substring(charPos.start, charPos.end));
-				console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
+				// console.log(count + ": SAVE string - " + charArr[charArr.length - 1] + " - S: start: " + charPos.start + "  end: " + charPos.end);
 			charPos.start = count + 1;
 			charPos.end = 0;
 			numPos.start = count;
@@ -201,7 +201,7 @@ function cmdCalc(info, numArr, opArr) {
 		var numArr = tmpArr.num;
 		var opArr = tmpArr.char;
 	}
-	var ops = /[+\"-\"*x/:()]/;
+	var ops = /([+\-*x/:])/g;
 		console.log(numArr);
 		console.log(opArr);
 
@@ -211,104 +211,154 @@ function cmdCalc(info, numArr, opArr) {
 		}
 	}
 
-			// PROBLEM LIES HERE
-		var tmpArr = opArr.filter(function (x) {
-			return x.search(/[()]/);
+		var prnthAt = {start: 0, end: 0};
+	if (opArr[0].replace(/\(/g, "") == "") {
+		prnthAt.start = opArr[0].length;
+	}
+	if (opArr[opArr.length - 1].replace(/\)/g, "") == "") {
+		prnthAt.end = opArr[opArr.length - 1].length;
+	}
+
+		var opArr = opArr.filter(function (x) {
+			return x.search(ops) > -1;
 		})
-			console.log(tmpArr);
-	if (parseInt(numArr.length - 1) != parseInt(tmpArr.length)) {  // check if calculation is possible
+			// console.log(tmpArr);
+	if (parseInt(numArr.length - 1) != parseInt(opArr.length)) {  // check if calculation is possible
 		return ["I can't give you an answer. :confused:\nSomething about your calculation doesn't seem right... :thinking_face:", "ERROR", "ERROR"];
 	}
 
 		var res = 0; var op = ""; replNum = 0;
 		var lvl2ops = /[*x/:]/; var skip = false;
-		var prnthTmp = -1; var returnTmpArr = [];
+		var prnthPos = -1; var returnTmpArr = [];
 		var numTmpArr = []; var opTmpArr = [];
+		var prnthLoop = false;
+		var securityCounter = 0; var securityMax = 20;
 
 	for (var countOpLvl = -1; countOpLvl < 3; countOpLvl++) {
-		for (var count = 0; count < opArr.length; count++) {
-
-			var curOp = opArr[count];
-				if (op == "") {
-					var op = numArr[count];
-				}
-
-			for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
-				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
-					var curNum = parseFloat(numArr[countAssign]);
-					var countCurNum = countAssign;
-						break;
-				}
+			if (countOpLvl == 0) {
+				prnthLoop = true;
 			}
-			for (var countAssign = count; countAssign >= 0; countAssign--) {  // assign prevNum
-				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
-					var prevNum = parseFloat(numArr[countAssign]);
-					var countPrevNum = countAssign;
-						break;
+		while (prnthLoop == true) {
+			for (var count = 0; count < opArr.length; count++) {
+
+				if (count == 0 && prnthAt.start > 0) {
+					prnthPos = -1;
 				}
-			}
 
-				if (countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
-					var prnthTmp = count;
-						console.log("FOUND 1");
+				var curOp = opArr[count];
+					if (curOp != "") {
 
-				} else if (countOpLvl == 0 && curOp.search(/[)]/g) != -1) {  // check for ')'
-							console.log("FOUND 2");
-						opArr[prnthTmp] = opArr[prnthTmp].replace("(", "");
-					for (var countPrnth = prnthTmp + 1; countPrnth <= count; countPrnth++) {
-						numTmpArr.push(numArr[count]);
-						opTmpArr.push(opArr[count].replace(")", ""));
-
-						numArr.splice(countPrnth, 1, "");
-						if (countPrnth < count) {
-							opArr.splice(countPrnth, 1, "");
-						} else {
-							opArr[countPrnth] = opArr[countPrnth].replace(")", "");
-						}
+					if (op == "") {
+						var op = numArr[count];
 					}
 
-						console.log(numTmpArr);
-						console.log(opTmpArr);
-
-					numArr[prnthTmp + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
-
+				for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
+					if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
+						var curNum = parseFloat(numArr[countAssign]);
+						var countCurNum = countAssign;
+							break;
+					}
+				}
+				for (var countAssign = count; countAssign >= 0; countAssign--) {  // assign prevNum
+					if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
+						var prevNum = parseFloat(numArr[countAssign]);
+						var countPrevNum = countAssign;
+							break;
+					}
 				}
 
+						if (prnthLoop == true) {
+							var skip = true;
+						}
 
-				if (countOpLvl == 1 && curOp.search(lvl2ops) == -1) {
+					if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
+						var prnthPos = count;
+							console.log("FOUND 1");
+
+					} else if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[)]/g) != -1 || count == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
+							if (count == opArr.length - 1 && prnthAt.end > 0) {
+								var xtr = 1;
+							} else {
+								var xtr = 0;
+							}
+								console.log("FOUND 2");
+							opArr[prnthPos] = opArr[prnthPos].replace("(", "");
+						for (var countPrnth = prnthPos + 1; countPrnth <= count + xtr; countPrnth++) {
+							numTmpArr.push(numArr[countPrnth]);
+							numArr.splice(countPrnth, 1, "");
+							if (countPrnth < count + xtr) {
+								opTmpArr.push(opArr[countPrnth]);
+								opArr.splice(countPrnth, 1, "");
+							} else {
+									opArr[countPrnth] = opArr[countPrnth].replace(")", "");
+								if (prnthPos == -1) {
+									prnthAt.start--;
+								}
+							}
+						}
+
+							console.log(numTmpArr);
+							console.log(opTmpArr);
+
+						numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+
+					}
+
+					if (countOpLvl == 0) {
+							var prnthLoop = !opArr.map(function (a) {  // check for parentheses
+								return a.search(/[()]/g);
+							}).every(function (b) {
+								return b == -1;
+							});
+							if (prnthAt.start > 0 || prnthAt.end > 0) { var prnthLoop = true; }
+
+						if (prnthLoop && count == opArr.length - 1) {
+							var count = -1;
+							securityCounter++;
+						}
+							if (securityCounter == securityMax) {
+								return ["An Error Occurred", "ERROR", "ERROR"]
+							}
+					}
+
+
+					if (countOpLvl == 1 && curOp.search(lvl2ops) == -1) {
+							var skip = true;
+					} else if (countOpLvl == 2 && curOp.search(lvl2ops) != -1) {
+							var skip = true;
+
+					} else if (countOpLvl == -1) {  // create ouput calculation
+						var op = op + " " + curOp + " " + curNum;
 						var skip = true;
-				} else if (countOpLvl == 2 && curOp.search(lvl2ops) != -1) {
-						var skip = true;
+					}
 
-				} else if (countOpLvl == -1) {
-					var op = op + " " + curOp + " " + curNum;
-					var skip = true;
+				if (skip == false) {
+					switch (curOp) {  // check calculation methods
+						case "+":
+							numArr.splice(countPrevNum, 1, parseFloat(prevNum + curNum));
+								break;
+						case "-":
+							numArr.splice(countPrevNum, 1, parseFloat(prevNum - curNum));
+								break;
+						case "*":
+						case "x":
+							numArr.splice(countPrevNum, 1, parseFloat(prevNum * curNum));
+								break;
+						case "/":
+						case ":":
+							numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
+								break;
+						default:
+							return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
+					}
+						numArr.splice(countCurNum, 1, "");
+				} else if (skip == true) {
+					var skip = false;
 				}
+					}
+						// console.log(numArr);
 
-			if (skip == false) {
-				switch (curOp) {  // check calculation methods
-					case "+":
-						numArr.splice(countPrevNum, 1, parseFloat(prevNum + curNum));
-							break;
-					case "-":
-						numArr.splice(countPrevNum, 1, parseFloat(prevNum - curNum));
-							break;
-					case "*":
-					case "x":
-						numArr.splice(countPrevNum, 1, parseFloat(prevNum * curNum));
-							break;
-					case "/":
-					case ":":
-						numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
-							break;
-					default:
-						return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
-				}
-					numArr.splice(countCurNum, 1, "");
-			} else if (skip == true) {
-				var skip = false;
 			}
-
 		}
 	}
 
@@ -539,9 +589,9 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 			var rndTmp = false;
 			var rndInfo = "";
 		for (var count = 0; count < inputLastArr.length; count++) {  // check inputs
-			if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
+			// if (inputArr[inputArr.length - 1][count].search(/[.,!?;]/g) != -1) {
 				// calcTmp = false;  // stop
-			}
+			// }
 			var inputTmp = inputLastArr[count].toLowerCase();
 
 			for (var countKeys = 0; countKeys < keyWordsArr.maxLength; countKeys++) {  // compare with key words
