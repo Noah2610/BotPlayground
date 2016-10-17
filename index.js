@@ -229,28 +229,120 @@ function cmdCalc(info, numArr, opArr) {
 
 		var res = 0; var op = ""; replNum = 0;
 		var lvl2ops = /[*x/:]/; var skip = false;
-		var prnthPos = -1; var returnTmpArr = [];
+		var prnthPos = -2; var returnTmpArr = [];
 		var numTmpArr = []; var opTmpArr = [];
-		var prnthLoop = false;
+		var prnthLoop = true;
 		var securityCounter = 0; var securityMax = 20;
 
-	for (var countOpLvl = -1; countOpLvl < 3; countOpLvl++) {
-			if (countOpLvl == 0) {
-				prnthLoop = true;
+	for (var count = 0; count < opArr.length; count++) {  // create output calculation
+		if (count == 0 && prnthAt.start > 0) {
+			for (var countTmp = 0; countTmp < prnthAt.start; countTmp++) {
+				var op = op + "(";
 			}
-		while (prnthLoop == true) {
-			for (var count = 0; count < opArr.length; count++) {
+		} else if (count == 0 && prnthAt.start == 0) {
+			var op = numArr[count];
+		}
 
-				if (count == 0 && prnthAt.start > 0) {
-					prnthPos = -1;
+		for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
+			if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
+				var curNum = parseFloat(numArr[countAssign]);
+				var countCurNum = countAssign;
+					break;
+			}
+		}
+		var op = op + " " + opArr[count] + " " + curNum;
+	}
+
+	for (var count = 0; count < prnthAt.end; count++) {
+		var op = op + ")";
+	}
+
+	while (prnthLoop == true) {  // process parentheses
+		for (var countOp = 0; countOp < opArr.length; countOp++) {
+
+			var curOp = opArr[countOp];
+
+			if (countOp == 0 && prnthAt.start > 0) {
+				var prnthPos = -1;
+					console.log("FOUND 1 (start): " + countOp)
+			}
+
+			if (curOp.search(/[(]/g) != -1 && prnthPos != -1) {  // check for '('
+				var prnthPos = countOp;
+					console.log("FOUND 1: " + countOp);
+
+			} else if (curOp.search(/[)]/g) != -1 || countOp == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
+					if (countOp == opArr.length - 1 && prnthAt.end > 0) {
+						var xtr = 1;
+					} else {
+						var xtr = 0;
+					}
+						console.log("FOUND 2: " + countOp);
+					if (prnthPos != -1) {
+						opArr[prnthPos] = opArr[prnthPos].replace("(", "");
+					} else if (prnthPos == -1) {
+						opArr[0] = opArr[0].replace("(", "");
+					}
+
+					var numTmpArr = []; var opTmpArr = [];
+				for (var countPrnth = prnthPos + 1; countPrnth <= countOp + xtr; countPrnth++) {
+					numTmpArr.push(numArr[countPrnth]);
+					numArr.splice(countPrnth, 1, "");
+					if (countPrnth < countOp + xtr) {
+						opTmpArr.push(opArr[countPrnth]);
+						opArr.splice(countPrnth, 1, "");
+					} else {
+							if (prnthAt.end == 0 || countOp + xtr < opArr.length) {
+								opArr[countPrnth] = opArr[countPrnth].replace(")", "");
+							} else if (prnthAt.end > 0 && countOp == opArr.length - 1) {
+								opArr[opArr.length - 1] = opArr[opArr.length - 1].replace(")", "");
+								prnthAt.end--;
+							}
+						if (prnthPos == -1) {
+							prnthAt.start--;
+						}
+					}
 				}
+
+					console.log("prnth: " + countOp);
+					console.log(numTmpArr);
+					console.log(opTmpArr);
+
+				numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+
+			}
+
+		}
+
+		var prnthLoop = !opArr.map(function (a) {  // check for parentheses
+			return a.search(/[()]/g);
+		}).every(function (b) {
+			return b == -1;
+		});
+		if (prnthAt.start > 0 || prnthAt.end > 0) { var prnthLoop = true; }
+
+		// if (prnthLoop && countOp == opArr.length - 1) {
+		// 	var count = -1;
+			securityCounter++;
+		// }
+		if (securityCounter == securityMax) {
+			return ["An Error Occurred", "ERROR", "ERROR"]
+		}
+
+		// console.log(opArr);
+	}
+
+	for (var countOpLvl = 0; countOpLvl < 2; countOpLvl++) {
+		// while (prnthLoop == true || countTmp < opArr.length) {
+			for (var count = 0; count < opArr.length; count++) {
+					console.log(count, opArr.length);
 
 				var curOp = opArr[count];
 					if (curOp != "") {
 
-					if (op == "") {
-						var op = numArr[count];
-					}
+					// if (op == "") {
+					// 	var op = numArr[count];
+					// }
 
 				for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
 					if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
@@ -266,75 +358,73 @@ function cmdCalc(info, numArr, opArr) {
 							break;
 					}
 				}
-			}
 
-					if (countOpLvl == 0) {
-						var skip = true;
-					}
+						// if (countOpLvl == 0) {
+						// 	var skip = true;
+						// }
+						// if (prnthLoop == true) {
+						// 	var skip = true;
+						// }
 
-						if (prnthLoop == true) {
+					// if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
+					// 	var prnthPos = count;
+					// 		console.log("FOUND 1");
+					//
+					// } else if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[)]/g) != -1 || prnthLoop == true && countOpLvl == 0 && count == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
+					// 		if (count == opArr.length - 1 && prnthAt.end > 0) {
+					// 			var xtr = 1;
+					// 		} else {
+					// 			var xtr = 0;
+					// 		}
+					// 			console.log("FOUND 2");
+					// 		opArr[prnthPos] = opArr[prnthPos].replace("(", "");
+					// 	for (var countPrnth = prnthPos + 1; countPrnth <= count + xtr; countPrnth++) {
+					// 		numTmpArr.push(numArr[countPrnth]);
+					// 		numArr.splice(countPrnth, 1, "");
+					// 		if (countPrnth < count + xtr) {
+					// 			opTmpArr.push(opArr[countPrnth]);
+					// 			opArr.splice(countPrnth, 1, "");
+					// 		} else {
+					// 				opArr[countPrnth] = opArr[countPrnth].replace(")", "");
+					// 			if (prnthPos == -1) {
+					// 				prnthAt.start--;
+					// 			}
+					// 		}
+					// 	}
+					//
+					// 		console.log(numTmpArr);
+					// 		console.log(opTmpArr);
+					//
+					// 	numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+					//
+					// }
+
+					// if (countOpLvl == 0) {
+						// 	var prnthLoop = !opArr.map(function (a) {  // check for parentheses
+						// 		return a.search(/[()]/g);
+						// 	}).every(function (b) {
+						// 		return b == -1;
+						// 	});
+						// 	if (prnthAt.start > 0 || prnthAt.end > 0) { var prnthLoop = true; }
+						//
+						// if (prnthLoop && count == opArr.length - 1) {
+						// 	var count = -1;
+						// 	securityCounter++;
+						// }
+						// 	if (securityCounter == securityMax) {
+						// 		return ["An Error Occurred", "ERROR", "ERROR"]
+						// 	}
+					// }
+
+
+					if (countOpLvl == 0 && curOp.search(lvl2ops) == -1) {
 							var skip = true;
-						}
-
-					if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
-						var prnthPos = count;
-							console.log("FOUND 1");
-
-					} else if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[)]/g) != -1 || count == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
-							if (count == opArr.length - 1 && prnthAt.end > 0) {
-								var xtr = 1;
-							} else {
-								var xtr = 0;
-							}
-								console.log("FOUND 2");
-							opArr[prnthPos] = opArr[prnthPos].replace("(", "");
-						for (var countPrnth = prnthPos + 1; countPrnth <= count + xtr; countPrnth++) {
-							numTmpArr.push(numArr[countPrnth]);
-							numArr.splice(countPrnth, 1, "");
-							if (countPrnth < count + xtr) {
-								opTmpArr.push(opArr[countPrnth]);
-								opArr.splice(countPrnth, 1, "");
-							} else {
-									opArr[countPrnth] = opArr[countPrnth].replace(")", "");
-								if (prnthPos == -1) {
-									prnthAt.start--;
-								}
-							}
-						}
-
-							console.log(numTmpArr);
-							console.log(opTmpArr);
-
-						numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
-
-					}
-
-					if (countOpLvl == 0) {
-							var prnthLoop = !opArr.map(function (a) {  // check for parentheses
-								return a.search(/[()]/g);
-							}).every(function (b) {
-								return b == -1;
-							});
-							if (prnthAt.start > 0 || prnthAt.end > 0) { var prnthLoop = true; }
-
-						if (prnthLoop && count == opArr.length - 1) {
-							var count = -1;
-							securityCounter++;
-						}
-							if (securityCounter == securityMax) {
-								return ["An Error Occurred", "ERROR", "ERROR"]
-							}
-					}
-
-
-					if (countOpLvl == 1 && curOp.search(lvl2ops) == -1) {
-							var skip = true;
-					} else if (countOpLvl == 2 && curOp.search(lvl2ops) != -1) {
+					} else if (countOpLvl == 1 && curOp.search(lvl2ops) != -1) {
 							var skip = true;
 
-					} else if (countOpLvl == -1) {  // create ouput calculation
-						var op = op + " " + curOp + " " + curNum;
-						var skip = true;
+					// } else if (countOpLvl == -1) {  // create ouput calculation
+					// 	var op = op + " " + curOp + " " + curNum;
+					// 	var skip = true;
 					}
 
 				if (skip == false) {
@@ -361,10 +451,10 @@ function cmdCalc(info, numArr, opArr) {
 					var skip = false;
 				}
 					}
-						// console.log(numArr);
+						console.log("normal: " + numArr);
 
 			}
-		}
+		// }
 	}
 
 	var op = op + " = ";
@@ -635,11 +725,7 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 				} else if (inputTmp == "test") {  // test
 					// test stuff goes here
-					// rtm.sendMessage("*test*", roomID);
-					// wh.send("*test*");
-					console.log(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
-					wh.send(inputTmp.substring(5, inputArr[inputArr.length - 1].length));
-					wh.send(inputArr)
+					rtm.sendMessage("* test *", roomID);
 						break;
 
 				} else {  // nlp
