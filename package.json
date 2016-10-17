@@ -10,6 +10,9 @@
   "author": "Noah",
   "license": "UNLICENCED",
   "dependencies": {
-    "@slack/client": "^3.6.0"
+    "@slack/client": "^3.6.0",
+    "datetime": "0.0.3",
+    "mkdirp": "^0.5.1",
+    "sprintf": "^0.1.5"
   }
 }
