@@ -211,19 +211,16 @@ function cmdCalc(info, numArr, opArr) {
 	// 	console.log(numArr);
 	// 	console.log(opArr);
 
-	for (var count = numArr.length - 1; count >= 0; count--) {  // remove all NaN from numArr
+	for (var count = numArr.length - 1; count >= 0; count--) {  // remove all NaN or empty elements from numArr
 		if (isNaN(numArr[count]) || numArr[count] == "") {
 			numArr.splice(count, 1);
 		}
 	}
 
-	for (var countTmp = 0; countTmp < 1; countTmp++) {
-
-	for (var count = opArr.length - 1; count >= 0; count--) {
-		if (opArr[count] == "" || opArr[count] == undefined) {
+	for (var count = opArr.length - 1; count >= 0; count--) {  // remove all empty elements from opArr
+		if (opArr[count] == "") {
 			opArr.splice(count, 1);
 		}
-	}
 	}
 
 		var prnthAt = {start: 0, end: 0};
@@ -473,7 +470,7 @@ function cmdRps(input, lang) {
 			rock: "scissors", scissors: "paper", paper: "rock",
 			action: {rock: "ROCK crushes SCISSORS", scissors: "SCISSORS cut PAPER", paper: "PAPER encloses ROCK"},
 			win: " wins!",
-			tie: user.name + " and " + bot.name + " both used " + input.toUpperCase() + ".\nStalemate!",
+			tie: user.name + " and " + bot.name + " both used " + input.toUpperCase() + ".\n*Stalemate!*",
 			use: " uses "
 		},
 		de: {
@@ -481,7 +478,7 @@ function cmdRps(input, lang) {
 			stein: "schere", schere: "papier", papier: "stein",
 			action: {stein: "STEIN zerschmettert SCHERE", schere: "SCHERE schneidet PAPIER", papier: "PAPIER umschließt STEIN"},
 			win: " gewinnt!",
-			tie: user.name + " und " + bot.name + " haben beide " + input.toUpperCase() + " verwendet.\nUnentschieden!",
+			tie: user.name + " und " + bot.name + " haben beide " + input.toUpperCase() + " verwendet.\n*Unentschieden!*",
 			use: " verwendet "
 		}
 	};
@@ -532,7 +529,7 @@ function cmdRps(input, lang) {
 
 	fs.writeFile(rpsDir, rpsScoreArr.join("\n"));
 
-	return user.name + objArr[lang].use + input.toUpperCase() + "\n" + bot.name + objArr[lang].use + botInput.toUpperCase() + "\n" + objArr[lang].action[winnerArr.obj] + "\n" + winnerArr.name + objArr[lang].win;
+	return user.name + objArr[lang].use + input.toUpperCase() + "\n" + bot.name + objArr[lang].use + botInput.toUpperCase() + "\n" + objArr[lang].action[winnerArr.obj] + "\n*" + winnerArr.name + objArr[lang].win + "*";
 
 };
 
