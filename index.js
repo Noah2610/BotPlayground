@@ -695,8 +695,8 @@ rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {  // receive mess
 
 			}
 		}
-			if (checkTmp == (inputArr[inputArr.length - 1].length) * (keyWordsArr.maxLength)) {  // nlp
-				rtm.sendMessage(nlp(inputArr[inputArr.length - 1]), roomID);
+			if (checkTmp == (inputLastArr.length) * (keyWordsArr.maxLength)) {  // nlp
+				rtm.sendMessage(nlp(inputLastArr), roomID);
 			}
 
 			if (calcTmp == true) {  // calculate
