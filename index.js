@@ -64,14 +64,20 @@ var rtm = new RtmClient(token, {
 	};
 
 	var keyWordsArr = {
-		maxLength: 5,
+		maxLength: 0,
 		list: ["list", "help", "commands", "befehle", "hilfe"],
 		hello: ["hello", "hi", "hey", "ey"],
-		calc: ["calculate", "evaluate", "solve", "berechne", "ausrechnen"],
+		calc: ["calculate", "evaluate", "solve", "berechne", "ausrechnen", "rechne"],
 		date: ["date", "today", "day"],
 		time: ["time", "clock"],
 		rnd: ["random", "between", "zwischen"]
 	};
+	for (var count in keyWordsArr) {  // set max length for key words
+		if (keyWordsArr[count].length > keyWordsArr.maxLength) {
+			keyWordsArr.maxLength = keyWordsArr[count].length;
+		}
+	}
+
 
 	var keyWordsExtArr = {
 		question: {question: ["who","how","do","are"]},
@@ -202,13 +208,22 @@ function cmdCalc(info, numArr, opArr) {
 		var opArr = tmpArr.char;
 	}
 	var ops = /([+\-*x/:])/g;
-		console.log(numArr);
-		console.log(opArr);
+	// 	console.log(numArr);
+	// 	console.log(opArr);
 
-	for (var count = 0; count < numArr.length; count++) {  // remove all NaN from numArr - should be obsolete now
-		if (isNaN(numArr[count])) {
+	for (var count = numArr.length - 1; count >= 0; count--) {  // remove all NaN from numArr
+		if (isNaN(numArr[count]) || numArr[count] == "") {
 			numArr.splice(count, 1);
 		}
+	}
+
+	for (var countTmp = 0; countTmp < 1; countTmp++) {
+
+	for (var count = opArr.length - 1; count >= 0; count--) {
+		if (opArr[count] == "" || opArr[count] == undefined) {
+			opArr.splice(count, 1);
+		}
+	}
 	}
 
 		var prnthAt = {start: 0, end: 0};
@@ -232,15 +247,16 @@ function cmdCalc(info, numArr, opArr) {
 		var prnthPos = -2; var returnTmpArr = [];
 		var numTmpArr = []; var opTmpArr = [];
 		var prnthLoop = true;
-		var securityCounter = 0; var securityMax = 20;
+		var securityCounter = 0; var securityMax = 25;
 
 	for (var count = 0; count < opArr.length; count++) {  // create output calculation
 		if (count == 0 && prnthAt.start > 0) {
 			for (var countTmp = 0; countTmp < prnthAt.start; countTmp++) {
 				var op = op + "(";
 			}
-		} else if (count == 0 && prnthAt.start == 0) {
-			var op = numArr[count];
+		}
+		if (count == 0) {
+			var op = op + " " + numArr[count];
 		}
 
 		for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
@@ -252,33 +268,39 @@ function cmdCalc(info, numArr, opArr) {
 		}
 		var op = op + " " + opArr[count] + " " + curNum;
 	}
+		var op = op.replace(/\s/g, "").split("").join(" ");
+		var tmp = sepStr(op).num;
+		for (var countSpc = 0; countSpc < tmp.length; countSpc++) {
+			var op = op.replace(tmp[countSpc].toString().split("").join(" "), tmp[countSpc]);
+		}
 
 	for (var count = 0; count < prnthAt.end; count++) {
 		var op = op + ")";
 	}
 
 	while (prnthLoop == true) {  // process parentheses
-		for (var countOp = 0; countOp < opArr.length; countOp++) {
+		for (var countOp = 0; countOp <= opArr.length; countOp++) {
+
+			if (countOp < opArr.length) {
 
 			var curOp = opArr[countOp];
 
 			if (countOp == 0 && prnthAt.start > 0) {
 				var prnthPos = -1;
-					console.log("FOUND 1 (start): " + countOp)
+					// console.log("FOUND 1 (start): " + countOp)
 			}
 
-			if (curOp.search(/[(]/g) != -1 && prnthPos != -1) {  // check for '('
-				var prnthPos = countOp;
-					console.log("FOUND 1: " + countOp);
+			}
 
-			} else if (curOp.search(/[)]/g) != -1 || countOp == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
-					if (countOp == opArr.length - 1 && prnthAt.end > 0) {
-						var xtr = 1;
+			if (curOp.search(/[)]/g) != -1 && prnthPos != -2 || countOp == opArr.length && prnthAt.end > 0 && prnthPos != -2) {  // check for ')'
+					if (countOp == opArr.length && prnthAt.end > 0) {
+						var xtr = 0;
 					} else {
 						var xtr = 0;
 					}
-						console.log("FOUND 2: " + countOp);
-					if (prnthPos != -1) {
+						// console.log("FOUND 2: " + countOp);
+					if (prnthPos > -1) {
+							// console.log("TEST " + prnthPos);
 						opArr[prnthPos] = opArr[prnthPos].replace("(", "");
 					} else if (prnthPos == -1) {
 						opArr[0] = opArr[0].replace("(", "");
@@ -292,9 +314,10 @@ function cmdCalc(info, numArr, opArr) {
 						opTmpArr.push(opArr[countPrnth]);
 						opArr.splice(countPrnth, 1, "");
 					} else {
+								// console.log(opArr[countPrnth]);
 							if (prnthAt.end == 0 || countOp + xtr < opArr.length) {
 								opArr[countPrnth] = opArr[countPrnth].replace(")", "");
-							} else if (prnthAt.end > 0 && countOp == opArr.length - 1) {
+							} else if (prnthAt.end > 0 && countOp == opArr.length) {
 								opArr[opArr.length - 1] = opArr[opArr.length - 1].replace(")", "");
 								prnthAt.end--;
 							}
@@ -304,12 +327,22 @@ function cmdCalc(info, numArr, opArr) {
 					}
 				}
 
-					console.log("prnth: " + countOp);
-					console.log(numTmpArr);
-					console.log(opTmpArr);
+					// console.log("count: " + countOp);
+					// console.log(numTmpArr);
+					// console.log(opTmpArr);
 
-				numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+				// numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
+				numArr.splice(prnthPos + 1, 1, cmdCalc("", numTmpArr, opTmpArr)[1]);
+					var prnthPos = -2;
 
+					// console.log("state num: " + numArr);
+					// console.log(opArr);
+
+			}
+
+			if (curOp.search(/[(]/g) != -1 /* && prnthPos != -1*/) {  // check for '('
+				var prnthPos = countOp;
+					// console.log("FOUND 1: " + countOp);
 			}
 
 		}
@@ -326,138 +359,69 @@ function cmdCalc(info, numArr, opArr) {
 			securityCounter++;
 		// }
 		if (securityCounter == securityMax) {
-			return ["An Error Occurred", "ERROR", "ERROR"]
+			return ["An Error Occurred (endless loop)", "ERROR", "ERROR"]
 		}
 
 		// console.log(opArr);
 	}
 
 	for (var countOpLvl = 0; countOpLvl < 2; countOpLvl++) {
-		// while (prnthLoop == true || countTmp < opArr.length) {
-			for (var count = 0; count < opArr.length; count++) {
-					console.log(count, opArr.length);
+		for (var count = 0; count < opArr.length; count++) {
 
-				var curOp = opArr[count];
-					if (curOp != "") {
+			var curOp = opArr[count];
+				if (curOp != "") {
 
-					// if (op == "") {
-					// 	var op = numArr[count];
-					// }
-
-				for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
-					if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
-						var curNum = parseFloat(numArr[countAssign]);
-						var countCurNum = countAssign;
-							break;
-					}
+			for (var countAssign = count + 1; countAssign < numArr.length; countAssign++) {  // assign curNum
+				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
+					var curNum = parseFloat(numArr[countAssign]);
+					var countCurNum = countAssign;
+						break;
 				}
-				for (var countAssign = count; countAssign >= 0; countAssign--) {  // assign prevNum
-					if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
-						var prevNum = parseFloat(numArr[countAssign]);
-						var countPrevNum = countAssign;
-							break;
-					}
-				}
-
-						// if (countOpLvl == 0) {
-						// 	var skip = true;
-						// }
-						// if (prnthLoop == true) {
-						// 	var skip = true;
-						// }
-
-					// if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[(]/g) != -1) {  // check for '('
-					// 	var prnthPos = count;
-					// 		console.log("FOUND 1");
-					//
-					// } else if (prnthLoop == true && countOpLvl == 0 && curOp.search(/[)]/g) != -1 || prnthLoop == true && countOpLvl == 0 && count == opArr.length - 1 && prnthAt.end > 0) {  // check for ')'
-					// 		if (count == opArr.length - 1 && prnthAt.end > 0) {
-					// 			var xtr = 1;
-					// 		} else {
-					// 			var xtr = 0;
-					// 		}
-					// 			console.log("FOUND 2");
-					// 		opArr[prnthPos] = opArr[prnthPos].replace("(", "");
-					// 	for (var countPrnth = prnthPos + 1; countPrnth <= count + xtr; countPrnth++) {
-					// 		numTmpArr.push(numArr[countPrnth]);
-					// 		numArr.splice(countPrnth, 1, "");
-					// 		if (countPrnth < count + xtr) {
-					// 			opTmpArr.push(opArr[countPrnth]);
-					// 			opArr.splice(countPrnth, 1, "");
-					// 		} else {
-					// 				opArr[countPrnth] = opArr[countPrnth].replace(")", "");
-					// 			if (prnthPos == -1) {
-					// 				prnthAt.start--;
-					// 			}
-					// 		}
-					// 	}
-					//
-					// 		console.log(numTmpArr);
-					// 		console.log(opTmpArr);
-					//
-					// 	numArr[prnthPos + 1] = cmdCalc("", numTmpArr, opTmpArr)[1];
-					//
-					// }
-
-					// if (countOpLvl == 0) {
-						// 	var prnthLoop = !opArr.map(function (a) {  // check for parentheses
-						// 		return a.search(/[()]/g);
-						// 	}).every(function (b) {
-						// 		return b == -1;
-						// 	});
-						// 	if (prnthAt.start > 0 || prnthAt.end > 0) { var prnthLoop = true; }
-						//
-						// if (prnthLoop && count == opArr.length - 1) {
-						// 	var count = -1;
-						// 	securityCounter++;
-						// }
-						// 	if (securityCounter == securityMax) {
-						// 		return ["An Error Occurred", "ERROR", "ERROR"]
-						// 	}
-					// }
-
-
-					if (countOpLvl == 0 && curOp.search(lvl2ops) == -1) {
-							var skip = true;
-					} else if (countOpLvl == 1 && curOp.search(lvl2ops) != -1) {
-							var skip = true;
-
-					// } else if (countOpLvl == -1) {  // create ouput calculation
-					// 	var op = op + " " + curOp + " " + curNum;
-					// 	var skip = true;
-					}
-
-				if (skip == false) {
-					switch (curOp) {  // check calculation methods
-						case "+":
-							numArr.splice(countPrevNum, 1, parseFloat(prevNum + curNum));
-								break;
-						case "-":
-							numArr.splice(countPrevNum, 1, parseFloat(prevNum - curNum));
-								break;
-						case "*":
-						case "x":
-							numArr.splice(countPrevNum, 1, parseFloat(prevNum * curNum));
-								break;
-						case "/":
-						case ":":
-							numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
-								break;
-						default:
-							return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
-					}
-						numArr.splice(countCurNum, 1, "");
-				} else if (skip == true) {
-					var skip = false;
-				}
-					}
-						console.log("normal: " + numArr);
-
 			}
-		// }
+			for (var countAssign = count; countAssign >= 0; countAssign--) {  // assign prevNum
+				if (numArr[countAssign] != "" && isNum(numArr[countAssign])) {
+					var prevNum = parseFloat(numArr[countAssign]);
+					var countPrevNum = countAssign;
+						break;
+				}
+			}
+
+				if (countOpLvl == 0 && curOp.search(lvl2ops) == -1) {
+						var skip = true;
+				} else if (countOpLvl == 1 && curOp.search(lvl2ops) != -1) {
+						var skip = true;
+				}
+
+			if (skip == false) {
+				switch (curOp) {  // check calculation methods
+					case "+":
+						numArr.splice(countPrevNum, 1, parseFloat(prevNum + curNum));
+							break;
+					case "-":
+						numArr.splice(countPrevNum, 1, parseFloat(prevNum - curNum));
+							break;
+					case "*":
+					case "x":
+						numArr.splice(countPrevNum, 1, parseFloat(prevNum * curNum));
+							break;
+					case "/":
+					case ":":
+						numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
+							break;
+					default:
+						return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
+				}
+					numArr.splice(countCurNum, 1, "");
+			} else if (skip == true) {
+				var skip = false;
+			}
+				}
+					// console.log("normal: " + numArr);
+
+		}
 	}
 
-	var op = op + " = ";
+	var op = op + " =";
 	for (var count = 0; count < numArr.length; count++) {
 		if (!isNaN(numArr[count]) && numArr[count] != "") {
 			var res = numArr[count];
@@ -465,7 +429,7 @@ function cmdCalc(info, numArr, opArr) {
 		}
 	}
 
-	return [op + res, res, op];
+	return ["`" + op + "` " + "*" + res + "*", res, op];
 
 };
 
