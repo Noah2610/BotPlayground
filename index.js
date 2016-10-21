@@ -207,7 +207,7 @@ function cmdCalc(info, numArr, opArr) {
 		var numArr = tmpArr.num;
 		var opArr = tmpArr.char;
 	}
-	var ops = /([+\-*x/:])/g;
+	var ops = /([+\-*x/:^])/g;
 	// 	console.log(numArr);
 	// 	console.log(opArr);
 
@@ -240,7 +240,7 @@ function cmdCalc(info, numArr, opArr) {
 	}
 
 		var res = 0; var op = ""; replNum = 0;
-		var lvl2ops = /[*x/:]/; var skip = false;
+		var lvl2ops = /[*x/:^]/; var skip = false;
 		var prnthPos = -2; var returnTmpArr = [];
 		var numTmpArr = []; var opTmpArr = [];
 		var prnthLoop = true;
@@ -404,6 +404,9 @@ function cmdCalc(info, numArr, opArr) {
 					case "/":
 					case ":":
 						numArr.splice(countPrevNum, 1, parseFloat(prevNum / curNum));
+							break;
+					case "^":
+						numArr.splice(countPrevNum, 1, parseFloat(Math.pow(prevNum, curNum)));
 							break;
 					default:
 						return ["I can't give you an answer. :confused:\n\"" + curOp + "\" is not a valid calculation operation! :confounded:", "ERROR", "ERROR"];
